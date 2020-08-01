@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "html2md": {
+      "commandName": "Project",
+      "commandLineArgs": "-o c:\\temp\\md -u \"http://goatly.net/2010/1/29/Creating-a-lightweight-in-memory-full-text-indexer.aspx\""
+    }
+  }
+}

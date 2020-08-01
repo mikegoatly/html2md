@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace html2md
 {
@@ -12,6 +15,9 @@ namespace html2md
 
         [NotNull]
         private readonly string? url;
+
+        private readonly HashSet<string> includeTags = new HashSet<string>(new [] { "body" });
+        private readonly HashSet<string> excludeTags = new HashSet<string>();
 
         private readonly bool showHelp;
 
@@ -45,6 +51,18 @@ namespace html2md
                         this.SaveArg(args, ref i, ref this.url);
                         break;
 
+                    case "--include-tags":
+                    case "--it":
+                    case "-t":
+                        this.SaveArg(args, ref i, ref this.includeTags);
+                        break;
+
+                    case "--exclude-tags":
+                    case "--et":
+                    case "-e":
+                        this.SaveArg(args, ref i, ref this.excludeTags);
+                        break;
+
                     default:
                         this.Error = $"Unknown argument {args[i]}";
                         break;
@@ -69,6 +87,18 @@ namespace html2md
             arg = args[i];
         }
 
+        private void SaveArg(string[] args, ref int i, ref HashSet<string> arg)
+        {
+            i += 1;
+            if (i >= args.Length)
+            {
+                this.Error = $"Missing parameter for {args[i - 1]}";
+                return;
+            }
+
+            arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        }
+
         public string? Error { get; set; }
 
         public bool ShowHelp => this.showHelp;
@@ -78,5 +108,9 @@ namespace html2md
         public string ImageOutputLocation => this.imageOutputLocation ?? this.outputLocation;
 
         public string Url => this.url;
+
+        public HashSet<string> IncludeTags => this.includeTags;
+
+        public HashSet<string> ExcludeTags => this.excludeTags;
     }
 }

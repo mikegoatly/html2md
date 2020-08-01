@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace html2md
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             var commandLine = new CommandLineArgs(args);
             if (commandLine.ShowHelp || commandLine.Error != null)
@@ -18,7 +19,8 @@ namespace html2md
             }
             else
             {
-                Console.WriteLine("Doing it");
+                var converter = new Converter(commandLine);
+                await converter.ExecuteAsync();
             }
 
         }
@@ -39,6 +41,10 @@ namespace html2md
             Console.WriteLine("Options:");
             Console.WriteLine("--image-output|-i <IMAGE OUTPUT LOCATION>");
             Console.WriteLine("    If no image output location is specified then they will be written to the same folder as the markdown file.");
+            Console.WriteLine("--include-tags|--it|-t <COMMA SEPARATED TAG LIST>");
+            Console.WriteLine("    If unspecified the entire body tag will be processed, otherwise only text contained in the specified tags will be processed.");
+            Console.WriteLine("--exclude-tags|--et|-e <COMMA SEPARATED TAG LIST>");
+            Console.WriteLine("    Allows for specific tags to be ignored. When combined with --include-tags, the excluded tag list will only be applied to tags nested within included tags.");                
         }
     }
 }
