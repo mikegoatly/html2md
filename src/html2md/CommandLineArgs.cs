@@ -16,16 +16,15 @@ namespace html2md
         [NotNull]
         private readonly string? url;
 
-        private readonly HashSet<string> includeTags = new HashSet<string>(new [] { "body" });
+        private readonly HashSet<string> includeTags = new HashSet<string>(new[] { "body" });
         private readonly HashSet<string> excludeTags = new HashSet<string>();
-
-        private readonly bool showHelp;
+        private readonly string defaultCodeLanguage = "csharp";
 
         public CommandLineArgs(string[] args)
         {
             if (args.Length == 0)
             {
-                this.showHelp = true;
+                this.ShowHelp = true;
             }
 
             for (var i = 0; i < args.Length; i++)
@@ -33,7 +32,7 @@ namespace html2md
                 switch (args[i])
                 {
                     case "--help":
-                        this.showHelp = true;
+                        this.ShowHelp = true;
                         break;
 
                     case "--output":
@@ -63,6 +62,10 @@ namespace html2md
                         this.SaveArg(args, ref i, ref this.excludeTags);
                         break;
 
+                    case "--default-code-language":
+                        this.SaveArg(args, ref i, ref this.defaultCodeLanguage);
+                        break;
+
                     default:
                         this.Error = $"Unknown argument {args[i]}";
                         break;
@@ -71,7 +74,7 @@ namespace html2md
 
             if (this.outputLocation == null || this.url == null)
             {
-                this.showHelp = true;
+                this.ShowHelp = true;
             }
         }
 
@@ -99,9 +102,11 @@ namespace html2md
             arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
         }
 
+        public string DefaultCodeLanguage => this.defaultCodeLanguage;
+
         public string? Error { get; set; }
 
-        public bool ShowHelp => this.showHelp;
+        public bool ShowHelp { get; }
 
         public string OutputLocation => this.outputLocation;
 
