@@ -63,7 +63,7 @@ namespace html2md
                         break;
 
                     case "--default-code-language":
-                        this.SaveArg(args, ref i, ref this.defaultCodeLanguage);
+                        this.SaveArg(args, ref i, ref this.defaultCodeLanguage!);
                         break;
 
                     default:
