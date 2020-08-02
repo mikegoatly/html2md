@@ -24,11 +24,16 @@ namespace html2md
                 Directory.CreateDirectory(commandLine.OutputLocation);
                 Directory.CreateDirectory(commandLine.ImageOutputLocation);
 
-                var converted = await converter.ConvertAsync(commandLine.Url);
+                var (markdown, collectedImages) = await converter.ConvertAsync(new Uri(commandLine.Url));
 
                 var outputFileName = Path.Combine(commandLine.OutputLocation, Path.GetFileNameWithoutExtension(commandLine.Url) + ".md");
                 Console.WriteLine("Writing output file " + outputFileName);
-                File.WriteAllText(outputFileName, converted);
+                await File.WriteAllTextAsync(outputFileName, markdown);
+
+                foreach (var image in collectedImages)
+                {
+                    await File.WriteAllBytesAsync(Path.Combine(commandLine.ImageOutputLocation, image.FileName), image.Data);
+                }
             }
 
         }
