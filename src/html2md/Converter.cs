@@ -1,13 +1,12 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.AspNetCore.StaticFiles;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -46,9 +45,18 @@ namespace html2md
             var collectedImages = new List<CollectedImage>(this.imageUris.Count);
             foreach (var image in this.imageUris)
             {
-                Console.WriteLine("Loading image data for " + image);
-                var data = await client.GetByteArrayAsync(new Uri(this.relativeUri, image));
-                collectedImages.Add(new CollectedImage(Path.GetFileName(image), data));
+                try
+                {
+                    Console.WriteLine("Loading image data for " + image);
+                    var data = await client.GetByteArrayAsync(new Uri(this.relativeUri, image));
+                    collectedImages.Add(new CollectedImage(Path.GetFileName(image), data));
+                }
+                catch (HttpRequestException ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine($"Error getting image data: {ex.Message}");
+                    Console.ResetColor();
+                }
             }
 
             return collectedImages;
@@ -58,6 +66,7 @@ namespace html2md
     public class Converter
     {
         private static readonly HttpClient client = new HttpClient();
+        private static readonly FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
         private readonly CommandLineArgs args;
 
         public Converter(CommandLineArgs args)
@@ -78,15 +87,14 @@ namespace html2md
             this.ProcessNode(doc.DocumentNode, builder, imageCollector, false);
 
             return (
-                RemoveRedundantWhiteSpace(builder.ToString()),
+                this.RemoveRedundantWhiteSpace(builder.ToString()),
                 await imageCollector.GetCollectedImagesAsync(client)
                 );
         }
 
         private string RemoveRedundantWhiteSpace(string text)
         {
-            text = Regex.Replace(text, "(^" + Environment.NewLine + "){2,}", Environment.NewLine, RegexOptions.Multiline);
-            return Regex.Replace(text, " {2,}", " ");
+            return Regex.Replace(text, "(^" + Environment.NewLine + "){2,}", Environment.NewLine, RegexOptions.Multiline);
         }
 
         private void ProcessNode(HtmlNode node, StringBuilder builder, ImageCollector imageCollector, bool emitText, string listItemType = "-")
@@ -112,12 +120,12 @@ namespace html2md
                             switch (node.Name)
                             {
                                 case "table":
-                                    EmitTable(node, builder, imageCollector);
-                                    EmitNewLine(builder);
+                                    this.EmitTable(node, builder, imageCollector);
+                                    this.EmitNewLine(builder);
                                     return;
 
                                 case "img":
-                                    EmitImage(node, builder, imageCollector);
+                                    this.EmitImage(node, builder, imageCollector);
                                     return;
 
                                 case "p":
@@ -168,7 +176,7 @@ namespace html2md
                             }
                         }
 
-                        ProcessChildNodes(node.ChildNodes, builder, imageCollector, emitText, listItemType);
+                        this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, emitText, listItemType);
 
                         if (emitNewLineAfterChildren)
                         {
@@ -195,7 +203,7 @@ namespace html2md
 
             if (src == null)
             {
-                Warn("No src attribute for image - it will not be emitted: " + node.OuterHtml);
+                this.Warn("No src attribute for image - it will not be emitted: " + node.OuterHtml);
             }
             else
             {
@@ -206,9 +214,9 @@ namespace html2md
 
         private void EmitTable(HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
         {
-            EmitNewLine(builder);
+            this.EmitNewLine(builder);
 
-            var (headers, skipFirstRow) = GetTableHeaders(node);
+            var (headers, skipFirstRow) = this.GetTableHeaders(node);
 
             foreach (var header in headers)
             {
@@ -217,9 +225,9 @@ namespace html2md
 
             builder.AppendLine("|");
 
-            EmitRepeated(builder, "|-", headers.Count, "|");
+            this.EmitRepeated(builder, "|-", headers.Count, "|");
 
-            IEnumerable<HtmlNode> rows = GetTableRows(node);
+            IEnumerable<HtmlNode> rows = this.GetTableRows(node);
             if (skipFirstRow)
             {
                 rows = rows.Skip(1);
@@ -230,13 +238,13 @@ namespace html2md
                 var cells = row.SelectNodes("td");
                 if (cells.Count != headers.Count)
                 {
-                    Warn("Table row has different number of columns to header - output will likely be malformed");
+                    this.Warn("Table row has different number of columns to header - output will likely be malformed");
                 }
 
                 foreach (var cell in cells)
                 {
                     builder.Append("|");
-                    ProcessNode(cell, builder, imageCollector, true);
+                    this.ProcessNode(cell, builder, imageCollector, true);
                 }
 
                 builder.AppendLine("|");
@@ -253,11 +261,11 @@ namespace html2md
                 skipFirstRow = true;
             }
 
-            return 
+            return
                 (
                     (headRow.SelectNodes("td") ?? Enumerable.Empty<HtmlNode>())
                         .Concat(headRow.SelectNodes("th") ?? Enumerable.Empty<HtmlNode>())
-                        .Select(n => ExtractText(n))
+                        .Select(n => this.ExtractText(n))
                         .ToList(),
                     skipFirstRow
                 );
@@ -348,12 +356,19 @@ namespace html2md
             if (href == null)
             {
                 this.Warn("Anchor has missing href and will be rendered as text: " + node.OuterHtml);
-                ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
+                this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
             }
             else
             {
+                // Handle special case where the link is to an image - we'll download that to the images folder
+                // as if it was an img tag
+                if (contentTypeProvider.TryGetContentType(href, out var contentType) && contentType.StartsWith("image/"))
+                {
+                    href = imageCollector.Collect(href);
+                }
+
                 builder.Append($"[");
-                ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
+                this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
                 builder.Append("](").Append(href).Append(')');
             }
         }
