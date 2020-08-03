@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Xunit;
 
-namespace html2md.Tests.Unit
+namespace Html2md.Tests.Unit
 {
     public class CommandLineArgsTests
     {

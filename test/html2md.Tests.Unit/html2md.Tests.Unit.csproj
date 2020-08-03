@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\html2md\html2md.csproj" />
+    <ProjectReference Include="..\..\src\html2md\Html2md.csproj" />
   </ItemGroup>
 
 </Project>

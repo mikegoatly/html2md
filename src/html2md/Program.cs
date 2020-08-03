@@ -1,13 +1,26 @@
-﻿using System;
+﻿using Html2md;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace html2md
+namespace Html2md
 {
     class Program
     {
         static async Task Main(string[] args)
         {
+            var loggerFactory = LoggerFactory.Create(
+                b => b.AddConsole(
+                    o =>
+                    {
+                        o.IncludeScopes = false;
+                    })
+                    .SetMinimumLevel(LogLevel.Debug));
+
+            var logger = loggerFactory.CreateLogger("html2md");
+            
             var commandLine = new CommandLineArgs(args);
             if (commandLine.ShowHelp || commandLine.Error != null)
             {
@@ -20,19 +33,22 @@ namespace html2md
             }
             else
             {
-                var converter = new Converter(commandLine);
+                var converter = new MarkdownConverter(commandLine, logger);
                 Directory.CreateDirectory(commandLine.OutputLocation);
                 Directory.CreateDirectory(commandLine.ImageOutputLocation);
 
                 var (markdown, collectedImages) = await converter.ConvertAsync(new Uri(commandLine.Url));
 
                 var outputFileName = Path.Combine(commandLine.OutputLocation, Path.GetFileNameWithoutExtension(commandLine.Url) + ".md");
-                Console.WriteLine("Writing output file " + outputFileName);
+
+                Console.WriteLine("Writing markdown file " + outputFileName);
                 await File.WriteAllTextAsync(outputFileName, markdown);
 
                 foreach (var image in collectedImages)
                 {
-                    await File.WriteAllBytesAsync(Path.Combine(commandLine.ImageOutputLocation, image.FileName), image.Data);
+                    var imagePath = Path.Combine(commandLine.ImageOutputLocation, image.FileName);
+                    Console.WriteLine("Writing image file " + imagePath);
+                    await File.WriteAllBytesAsync(imagePath, image.Data);
                 }
             }
 

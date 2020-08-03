@@ -1,5 +1,7 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,78 +12,29 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace html2md
+namespace Html2md
 {
-    public class CollectedImage
-    {
-        public CollectedImage(string fileName, byte[] data)
-        {
-            this.FileName = fileName;
-            this.Data = data;
-        }
-
-        public string FileName { get; }
-        public byte[] Data { get; }
-    }
-
-    public class ImageCollector
-    {
-        private readonly Uri relativeUri;
-        private readonly List<string> imageUris = new List<string>();
-
-        public ImageCollector(Uri relativeUri)
-        {
-            this.relativeUri = relativeUri;
-        }
-
-        public string Collect(string imageUri)
-        {
-            this.imageUris.Add(imageUri);
-            return Path.GetFileName(imageUri);
-        }
-
-        public async Task<IReadOnlyList<CollectedImage>> GetCollectedImagesAsync(HttpClient client)
-        {
-            var collectedImages = new List<CollectedImage>(this.imageUris.Count);
-            foreach (var image in this.imageUris)
-            {
-                try
-                {
-                    Console.WriteLine("Loading image data for " + image);
-                    var data = await client.GetByteArrayAsync(new Uri(this.relativeUri, image));
-                    collectedImages.Add(new CollectedImage(Path.GetFileName(image), data));
-                }
-                catch (HttpRequestException ex)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"Error getting image data: {ex.Message}");
-                    Console.ResetColor();
-                }
-            }
-
-            return collectedImages;
-        }
-    }
-
-    public class Converter
+    public class MarkdownConverter
     {
         private static readonly HttpClient client = new HttpClient();
         private static readonly FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
-        private readonly CommandLineArgs args;
+        private readonly IConversionOptions args;
+        private readonly ILogger logger;
 
-        public Converter(CommandLineArgs args)
+        public MarkdownConverter(IConversionOptions args, ILogger? logger = null)
         {
             this.args = args;
+            this.logger = logger ?? NullLogger.Instance;
         }
 
-        public async Task<(string markdown, IReadOnlyList<CollectedImage> collectedImages)> ConvertAsync(Uri url)
+        public async Task<(string markdown, IReadOnlyList<ReferencedImage> collectedImages)> ConvertAsync(Uri url)
         {
             var content = await client.GetStringAsync(url);
             var doc = new HtmlDocument();
             var builder = new StringBuilder();
-            var imageCollector = new ImageCollector(url);
+            var imageCollector = new ImageCollector(url, this.logger);
 
-            Console.WriteLine("Loading page content for " + url);
+            logger.LogInformation("Loading page content for {PageUri}", url);
             doc.LoadHtml(content);
 
             this.ProcessNode(doc.DocumentNode, builder, imageCollector, false);
@@ -152,7 +105,6 @@ namespace html2md
                                 case "h4":
                                 case "h5":
                                 case "h6":
-                                case "h7":
                                     this.EmitNewLine(builder);
                                     emitNewLineAfterChildren = true;
                                     builder.Append('#', node.Name[1] - '0').Append(' ');
@@ -203,11 +155,11 @@ namespace html2md
 
             if (src == null)
             {
-                this.Warn("No src attribute for image - it will not be emitted: " + node.OuterHtml);
+                this.logger.LogWarning("No src attribute for image - it will not be emitted: {NodeHtml}", node.OuterHtml);
             }
             else
             {
-                var imageUri = imageCollector.Collect(src);
+                var imageUri = BuildImagePath(imageCollector.Collect(src));
                 builder.Append("![").Append(alt).Append("](").Append(imageUri).Append(')');
             }
         }
@@ -238,7 +190,7 @@ namespace html2md
                 var cells = row.SelectNodes("td");
                 if (cells.Count != headers.Count)
                 {
-                    this.Warn("Table row has different number of columns to header - output will likely be malformed");
+                    this.logger.LogWarning("Table row has different number of columns to header - output will likely be malformed");
                 }
 
                 foreach (var cell in cells)
@@ -346,7 +298,6 @@ namespace html2md
                 return string.Empty;
             }
 
-            // return Regex.Replace(text, "[\r\n]+", "");
             return text;
         }
 
@@ -355,7 +306,7 @@ namespace html2md
             var href = node.GetAttributeValue("href", null);
             if (href == null)
             {
-                this.Warn("Anchor has missing href and will be rendered as text: " + node.OuterHtml);
+                this.logger.LogWarning("Anchor has missing href and will be rendered as text: {NodeHtml}", node.OuterHtml);
                 this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
             }
             else
@@ -364,7 +315,7 @@ namespace html2md
                 // as if it was an img tag
                 if (contentTypeProvider.TryGetContentType(href, out var contentType) && contentType.StartsWith("image/"))
                 {
-                    href = imageCollector.Collect(href);
+                    href = BuildImagePath(imageCollector.Collect(href));
                 }
 
                 builder.Append($"[");
@@ -373,11 +324,9 @@ namespace html2md
             }
         }
 
-        private void Warn(string message)
+        private string BuildImagePath(string fileName)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(message);
-            Console.ResetColor();
+            return Path.Combine(this.args.ImagePathPrefix, fileName);
         }
     }
 }

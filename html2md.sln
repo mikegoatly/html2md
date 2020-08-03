@@ -1,15 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30317.65
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F6102019-0A4B-414C-B3C8-F79CF3BA373A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "html2md", "src\html2md\html2md.csproj", "{7A24D522-173E-44A3-B585-0E58DE308F3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Html2md", "src\html2md\Html2md.csproj", "{7A24D522-173E-44A3-B585-0E58DE308F3A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{295FC185-B03D-42D9-BA98-405C1C1A3F2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "html2md.Tests.Unit", "test\html2md.Tests.Unit\html2md.Tests.Unit.csproj", "{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Html2md.Tests.Unit", "test\html2md.Tests.Unit\Html2md.Tests.Unit.csproj", "{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Html2md.Core", "src\Html2md.Core\Html2md.Core.csproj", "{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,9 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7A24D522-173E-44A3-B585-0E58DE308F3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -48,9 +47,28 @@ Global
 		{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55}.Release|x64.Build.0 = Release|Any CPU
 		{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55}.Release|x86.ActiveCfg = Release|Any CPU
 		{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55}.Release|x86.Build.0 = Release|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Debug|x64.Build.0 = Debug|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Debug|x86.Build.0 = Debug|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Release|x64.ActiveCfg = Release|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Release|x64.Build.0 = Release|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Release|x86.ActiveCfg = Release|Any CPU
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7A24D522-173E-44A3-B585-0E58DE308F3A} = {F6102019-0A4B-414C-B3C8-F79CF3BA373A}
 		{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55} = {295FC185-B03D-42D9-BA98-405C1C1A3F2D}
+		{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B} = {F6102019-0A4B-414C-B3C8-F79CF3BA373A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6617FDF0-62F7-44CF-BFF2-B325FFD13489}
 	EndGlobalSection
 EndGlobal

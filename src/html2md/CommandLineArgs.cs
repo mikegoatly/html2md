@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace html2md
+namespace Html2md
 {
-    public class CommandLineArgs
+    public class CommandLineArgs : IConversionOptions
     {
         [NotNull]
         private readonly string? outputLocation;
@@ -19,6 +19,7 @@ namespace html2md
         private readonly HashSet<string> includeTags = new HashSet<string>(new[] { "body" });
         private readonly HashSet<string> excludeTags = new HashSet<string>();
         private readonly string defaultCodeLanguage = "csharp";
+        private readonly string imagePathPrefix = "";
 
         public CommandLineArgs(string[] args)
         {
@@ -43,6 +44,11 @@ namespace html2md
                     case "--image-output":
                     case "-i":
                         this.SaveArg(args, ref i, ref this.imageOutputLocation);
+                        break;
+
+                    case "--image-path-prefix":
+                    case "--ipp":
+                        this.SaveArg(args, ref i, ref this.imagePathPrefix!);
                         break;
 
                     case "--url":
@@ -102,6 +108,8 @@ namespace html2md
             arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
         }
 
+        public string ImagePathPrefix => this.imagePathPrefix;
+
         public string DefaultCodeLanguage => this.defaultCodeLanguage;
 
         public string? Error { get; set; }
@@ -114,8 +122,8 @@ namespace html2md
 
         public string Url => this.url;
 
-        public HashSet<string> IncludeTags => this.includeTags;
+        public ISet<string> IncludeTags => this.includeTags;
 
-        public HashSet<string> ExcludeTags => this.excludeTags;
+        public ISet<string> ExcludeTags => this.excludeTags;
     }
 }
