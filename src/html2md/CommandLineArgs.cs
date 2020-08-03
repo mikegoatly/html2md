@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -20,6 +21,7 @@ namespace Html2md
         private readonly HashSet<string> excludeTags = new HashSet<string>();
         private readonly string defaultCodeLanguage = "csharp";
         private readonly string imagePathPrefix = "";
+        private readonly string? logLevel = "Error";
 
         public CommandLineArgs(string[] args)
         {
@@ -32,6 +34,10 @@ namespace Html2md
             {
                 switch (args[i])
                 {
+                    case "--logging":
+                        this.SaveArg(args, ref i, ref this.logLevel);
+                        break;
+
                     case "--help":
                         this.ShowHelp = true;
                         break;
@@ -106,6 +112,19 @@ namespace Html2md
             }
 
             arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        }
+
+        public LogLevel LogLevel
+        {
+            get
+            {
+                if (Enum.TryParse<LogLevel>(this.logLevel, out var level))
+                {
+                    return level;
+                }
+
+                return LogLevel.Error;
+            }
         }
 
         public string ImagePathPrefix => this.imagePathPrefix;

@@ -5,6 +5,13 @@
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <RootNamespace>Html2md</RootNamespace>
+
+    <PackageId>html2md</PackageId>
+    <Authors>Mike Goatly</Authors>
+    <Description>A library capable of converting an HTML page to markdown, downloading and re-linking any associated images.</Description>
+    <Copyright>Copyright Mike Goatly</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/mikegoatly/html2md</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

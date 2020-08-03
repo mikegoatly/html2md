@@ -5,6 +5,16 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LanguageVersion>8.0</LanguageVersion>
     <Nullable>enable</Nullable>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>html2md</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageId>dotnet-html2md</PackageId>
+    <Authors>Mike Goatly</Authors>
+    <Description>A command line tool capable of converting an HTML page to markdown, downloading and re-linking any associated images.</Description>
+    <Copyright>Copyright Mike Goatly</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/mikegoatly/html2md</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +26,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Html2md.Core\Html2md.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

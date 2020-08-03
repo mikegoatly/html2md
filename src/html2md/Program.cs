@@ -1,27 +1,26 @@
-﻿using Html2md;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace Html2md
 {
-    class Program
+    internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
+            var commandLine = new CommandLineArgs(args);
+
             var loggerFactory = LoggerFactory.Create(
                 b => b.AddConsole(
                     o =>
                     {
                         o.IncludeScopes = false;
                     })
-                    .SetMinimumLevel(LogLevel.Debug));
+                    .SetMinimumLevel(commandLine.LogLevel));
 
             var logger = loggerFactory.CreateLogger("html2md");
-            
-            var commandLine = new CommandLineArgs(args);
+
             if (commandLine.ShowHelp || commandLine.Error != null)
             {
                 if (commandLine.Error != null)
@@ -74,6 +73,10 @@ namespace Html2md
             Console.WriteLine("    If unspecified the entire body tag will be processed, otherwise only text contained in the specified tags will be processed.");
             Console.WriteLine("--exclude-tags|--et|-e <COMMA SEPARATED TAG LIST>");
             Console.WriteLine("    Allows for specific tags to be ignored.");
+            Console.WriteLine("--image-path-prefix|--ipp <IMAGE PATH PREFIX>");
+            Console.WriteLine("    The prefix to apply to all rendered image URLs - helpful when you're going to be serving images from a different location, relative or absolute.");
+            Console.WriteLine("--default-code-language <LANGUAGE>");
+            Console.WriteLine("    The default language to use on code blocks converted from pre tags - defaults to csharp");
         }
     }
 }

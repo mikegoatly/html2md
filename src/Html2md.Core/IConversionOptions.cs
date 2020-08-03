@@ -10,7 +10,7 @@ namespace Html2md
     {
         /// <summary>
         /// Gets the prefix to apply to all rendered image URLs - helpful when you're going to be serving
-        /// images from a different location, relative or absolute. 
+        /// images from a different location, relative or absolute.
         /// </summary>
         string ImagePathPrefix { get; }
 
