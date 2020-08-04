@@ -11,7 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{295FC185-B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Html2md.Tests.Unit", "test\html2md.Tests.Unit\Html2md.Tests.Unit.csproj", "{4D2EDF74-9C6D-44B7-AE43-2CDE3B5D5F55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Html2md.Core", "src\Html2md.Core\Html2md.Core.csproj", "{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Html2md.Core", "src\Html2md.Core\Html2md.Core.csproj", "{7FB7F35C-52C6-4BC0-A962-FDFD61DDCD1B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F75B582A-E567-4AA7-9DDD-81245C339160}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

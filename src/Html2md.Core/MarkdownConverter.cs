@@ -16,33 +16,39 @@ namespace Html2md
 {
     public class MarkdownConverter
     {
-        private static readonly HttpClient client = new HttpClient();
         private static readonly FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
         private readonly IConversionOptions args;
         private readonly ILogger logger;
+        private readonly HttpClient httpClient;
 
         public MarkdownConverter(IConversionOptions args, ILogger? logger = null)
+            : this(args, null, logger)
+        {
+        }
+
+        public MarkdownConverter(IConversionOptions args, HttpClient? httpClient = null, ILogger? logger = null)
         {
             this.args = args;
             this.logger = logger ?? NullLogger.Instance;
+            this.httpClient = httpClient ?? new HttpClient();
         }
 
-        public async Task<(string markdown, IReadOnlyList<ReferencedImage> collectedImages)> ConvertAsync(Uri url)
+        public async Task<ConvertedDocument> ConvertAsync(Uri url)
         {
-            var content = await client.GetStringAsync(url);
+            var content = await this.httpClient.GetStringAsync(url);
             var doc = new HtmlDocument();
             var builder = new StringBuilder();
             var imageCollector = new ImageCollector(url, this.logger);
 
-            logger.LogInformation("Loading page content for {PageUri}", url);
+            this.logger.LogInformation("Loading page content for {PageUri}", url);
             doc.LoadHtml(content);
 
+            this.logger.LogDebug("Processing page content");
             this.ProcessNode(doc.DocumentNode, builder, imageCollector, false);
 
-            return (
+            return new ConvertedDocument(
                 this.RemoveRedundantWhiteSpace(builder.ToString()),
-                await imageCollector.GetCollectedImagesAsync(client)
-                );
+                await imageCollector.GetCollectedImagesAsync(this.httpClient));
         }
 
         private string RemoveRedundantWhiteSpace(string text)
@@ -67,7 +73,7 @@ namespace Html2md
                     if (!this.args.ExcludeTags.Contains(node.Name))
                     {
                         var emitNewLineAfterChildren = false;
-                        emitText = emitText || this.args.IncludeTags.Contains(node.Name);
+                        emitText = emitText || this.IsIncludedTag(node.Name);
                         if (emitText)
                         {
                             switch (node.Name)
@@ -140,6 +146,11 @@ namespace Html2md
             }
         }
 
+        private bool IsIncludedTag(string tagName)
+        {
+            return this.args.IncludeTags.Count == 0 || this.args.IncludeTags.Contains(tagName);
+        }
+
         private void ProcessChildNodes(HtmlNodeCollection nodes, StringBuilder builder, ImageCollector imageCollector, bool emitText, string listItemType = "-")
         {
             foreach (var childNode in nodes)
@@ -159,7 +170,7 @@ namespace Html2md
             }
             else
             {
-                var imageUri = BuildImagePath(imageCollector.Collect(src));
+                var imageUri = this.BuildImagePath(imageCollector.Collect(src));
                 builder.Append("![").Append(alt).Append("](").Append(imageUri).Append(')');
             }
         }
@@ -315,7 +326,7 @@ namespace Html2md
                 // as if it was an img tag
                 if (contentTypeProvider.TryGetContentType(href, out var contentType) && contentType.StartsWith("image/"))
                 {
-                    href = BuildImagePath(imageCollector.Collect(href));
+                    href = this.BuildImagePath(imageCollector.Collect(href));
                 }
 
                 builder.Append($"[");
