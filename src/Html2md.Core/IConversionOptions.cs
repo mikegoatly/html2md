@@ -15,7 +15,7 @@ namespace Html2md
         string ImagePathPrefix { get; }
 
         /// <summary>
-        /// Gets the default code language to apply to code blocks mapped from pre tags.
+        /// Gets the default code language to apply to code blocks mapped from pre tags. The default is "csharp".
         /// </summary>
         string DefaultCodeLanguage { get; }
 
