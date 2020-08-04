@@ -28,6 +28,7 @@ The default is `csharp`.
 - `IncludeTags`: The set of tags to include in the conversion process. If this is empty then all elements will processed.
 - `ExcludeTags`: The set of tags to exclude from the conversion process. You can use this if there are certain parts of
 a document you don't want translating to markdown, e.g. aside, nav, etc.
+- `CodeLanguageClassMap`: A dictionary mapping between class names that can appear on `pre` tags and the language that they map to.E.g. you might map the class name "sh_csharp" to "csharp" and "sh_powershell" to "powershell".
 
 ## Converted content
 
@@ -165,6 +166,18 @@ However, if the `pre` tag has a `code` class name it will have the `DefaultCodeL
  content
  ```
  ````
+
+Additionally, if you have configured the `CodeLanguageClassMap` mapping `lang_ps` to `powershell`:
+
+`<pre class="lang_ps">content</pre>` becomes:
+
+ ```` markdown
+ ``` powershell
+ content
+ ```
+ ````
+
+As would `<pre class="code lang_ps">content</pre>`, as the class name lookup will be inspected before falling back to the default code language.
 
 ### `<ul>`
 

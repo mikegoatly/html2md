@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System.Collections.Generic;
 using Xunit;
 
 namespace Html2md.Tests.Unit
@@ -22,12 +23,21 @@ namespace Html2md.Tests.Unit
                 "http://goatly.net",
                 "--image-output",
                 "c:\\test\\images",
+                "--code-language-class-map",
+                "cs:csharp,ps:powershell"
             });
 
+            sut.Error.Should().BeNull();
             sut.OutputLocation.Should().Be("c:\\test\\output");
             sut.Url.Should().Be("http://goatly.net");
             sut.ImageOutputLocation.Should().Be("c:\\test\\images");
             sut.ShowHelp.Should().BeFalse();
+            sut.CodeLanguageClassMap.Should().BeEquivalentTo(
+                new Dictionary<string, string>
+                {
+                    { "cs", "csharp" },
+                    { "ps", "powershell" }
+                });
         }
 
         [Fact]

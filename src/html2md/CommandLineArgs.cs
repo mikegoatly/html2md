@@ -19,6 +19,7 @@ namespace Html2md
 
         private readonly HashSet<string> includeTags = new HashSet<string>(new[] { "body" });
         private readonly HashSet<string> excludeTags = new HashSet<string>();
+        private readonly Dictionary<string, string> codeLanguageClassMap = new Dictionary<string, string>();
         private readonly string defaultCodeLanguage = "csharp";
         private readonly string imagePathPrefix = "";
         private readonly string? logLevel = "Error";
@@ -30,12 +31,12 @@ namespace Html2md
                 this.ShowHelp = true;
             }
 
-            for (var i = 0; i < args.Length; i++)
+            for (var i = 0; i < args.Length && this.Error == null; i++)
             {
                 switch (args[i])
                 {
                     case "--logging":
-                        this.SaveArg(args, ref i, ref this.logLevel);
+                        SaveArg(args, ref i, ref this.logLevel);
                         break;
 
                     case "--help":
@@ -44,38 +45,42 @@ namespace Html2md
 
                     case "--output":
                     case "-o":
-                        this.SaveArg(args, ref i, ref this.outputLocation);
+                        SaveArg(args, ref i, ref this.outputLocation);
                         break;
 
                     case "--image-output":
                     case "-i":
-                        this.SaveArg(args, ref i, ref this.imageOutputLocation);
+                        SaveArg(args, ref i, ref this.imageOutputLocation);
                         break;
 
                     case "--image-path-prefix":
                     case "--ipp":
-                        this.SaveArg(args, ref i, ref this.imagePathPrefix!);
+                        SaveArg(args, ref i, ref this.imagePathPrefix!);
                         break;
 
                     case "--url":
                     case "-u":
-                        this.SaveArg(args, ref i, ref this.url);
+                        SaveArg(args, ref i, ref this.url);
                         break;
 
                     case "--include-tags":
                     case "--it":
                     case "-t":
-                        this.SaveArg(args, ref i, ref this.includeTags);
+                        SaveArg(args, ref i, ref this.includeTags);
                         break;
 
                     case "--exclude-tags":
                     case "--et":
                     case "-e":
-                        this.SaveArg(args, ref i, ref this.excludeTags);
+                        SaveArg(args, ref i, ref this.excludeTags);
+                        break;
+
+                    case "--code-language-class-map":
+                        SaveArg(args, ref i, ref this.codeLanguageClassMap!);
                         break;
 
                     case "--default-code-language":
-                        this.SaveArg(args, ref i, ref this.defaultCodeLanguage!);
+                        SaveArg(args, ref i, ref this.defaultCodeLanguage!);
                         break;
 
                     default:
@@ -90,28 +95,51 @@ namespace Html2md
             }
         }
 
-        private void SaveArg(string[] args, ref int i, ref string? arg)
+        private string? GetArgParameter(string[] args, ref int i)
         {
             i += 1;
             if (i >= args.Length)
             {
                 this.Error = $"Missing parameter for {args[i - 1]}";
-                return;
+                return null;
             }
 
-            arg = args[i];
+            return args[i];
+        }
+
+        private void SaveArg(string[] args, ref int i, ref string? arg)
+        {
+            arg = GetArgParameter(args, ref i);
         }
 
         private void SaveArg(string[] args, ref int i, ref HashSet<string> arg)
         {
-            i += 1;
-            if (i >= args.Length)
+            var argValue = GetArgParameter(args, ref i);
+            if (argValue != null)
             {
-                this.Error = $"Missing parameter for {args[i - 1]}";
-                return;
+                arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
             }
+        }
 
-            arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        private void SaveArg(string[] args, ref int i, ref Dictionary<string, string> arg)
+        {
+            var argIndex = i;
+            var argValue = GetArgParameter(args, ref i);
+            if (argValue != null)
+            {
+                var pairs = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries)
+                .Select(kp => kp.Split(":"))
+                .ToList();
+
+                if (pairs.Any(p => p.Length != 2))
+                {
+                    this.Error = "Malformed argument value for " + args[argIndex];
+                }
+                else
+                {
+                    arg = pairs.ToDictionary(p => p[0], p => p[1]);
+                }
+            }
         }
 
         public LogLevel LogLevel
@@ -144,5 +172,7 @@ namespace Html2md
         public ISet<string> IncludeTags => this.includeTags;
 
         public ISet<string> ExcludeTags => this.excludeTags;
+
+        public IDictionary<string, string> CodeLanguageClassMap => this.codeLanguageClassMap;
     }
 }

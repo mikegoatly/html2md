@@ -17,18 +17,18 @@ namespace Html2md
     public class MarkdownConverter
     {
         private static readonly FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
-        private readonly IConversionOptions args;
+        private readonly IConversionOptions options;
         private readonly ILogger logger;
         private readonly HttpClient httpClient;
 
-        public MarkdownConverter(IConversionOptions args, ILogger? logger = null)
-            : this(args, null, logger)
+        public MarkdownConverter(IConversionOptions options, ILogger? logger = null)
+            : this(options, null, logger)
         {
         }
 
-        public MarkdownConverter(IConversionOptions args, HttpClient? httpClient = null, ILogger? logger = null)
+        public MarkdownConverter(IConversionOptions options, HttpClient? httpClient = null, ILogger? logger = null)
         {
-            this.args = args;
+            this.options = options;
             this.logger = logger ?? NullLogger.Instance;
             this.httpClient = httpClient ?? new HttpClient();
         }
@@ -70,7 +70,7 @@ namespace Html2md
 
                 case HtmlNodeType.Document:
                 case HtmlNodeType.Element:
-                    if (!this.args.ExcludeTags.Contains(node.Name))
+                    if (!this.options.ExcludeTags.Contains(node.Name))
                     {
                         var emitNewLineAfterChildren = false;
                         emitText = emitText || this.IsIncludedTag(node.Name);
@@ -148,7 +148,7 @@ namespace Html2md
 
         private bool IsIncludedTag(string tagName)
         {
-            return this.args.IncludeTags.Count == 0 || this.args.IncludeTags.Contains(tagName);
+            return this.options.IncludeTags.Count == 0 || this.options.IncludeTags.Contains(tagName);
         }
 
         private void ProcessChildNodes(HtmlNodeCollection nodes, StringBuilder builder, ImageCollector imageCollector, bool emitText, string listItemType = "-")
@@ -267,9 +267,18 @@ namespace Html2md
 
         private void EmitPreformattedText(HtmlNode node, StringBuilder builder)
         {
+            foreach (var className in node.GetClasses())
+            {
+                if (this.options.CodeLanguageClassMap.TryGetValue(className, out var language))
+                {
+                    this.EmitPreformattedText(node, builder, language);
+                    return;
+                }
+            }
+
             if (node.HasClass("code"))
             {
-                this.EmitPreformattedText(node, builder, this.args.DefaultCodeLanguage);
+                this.EmitPreformattedText(node, builder, this.options.DefaultCodeLanguage);
             }
             else
             {
@@ -281,9 +290,13 @@ namespace Html2md
         {
             this.EmitNewLine(builder);
 
-            builder
-                .Append("``` ")
-                .AppendLine(language)
+            builder.Append("```");
+            if (language.Length > 0)
+            {
+                builder.Append(" ");
+            }
+
+            builder.AppendLine(language)
                 .AppendLine(HttpUtility.HtmlDecode(this.ExtractText(node, removeOnlyLeadingAndTrailingNewLines: true)))
                 .AppendLine("```");
         }
@@ -337,7 +350,7 @@ namespace Html2md
 
         private string BuildImagePath(string fileName)
         {
-            return Path.Combine(this.args.ImagePathPrefix, fileName);
+            return Path.Combine(this.options.ImagePathPrefix, fileName);
         }
     }
 }

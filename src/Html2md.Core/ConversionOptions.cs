@@ -16,5 +16,8 @@ namespace Html2md
 
         /// <inheritdoc />
         public ISet<string> ExcludeTags { get; set; } = new HashSet<string>();
+
+        /// <inheritdoc />
+        public IDictionary<string, string> CodeLanguageClassMap { get; set; } = new Dictionary<string, string>();
     }
 }

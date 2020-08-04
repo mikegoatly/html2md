@@ -38,6 +38,89 @@ namespace Html2md.Tests.Unit
         }
 
         [Fact]
+        public async Task ShouldConvertPreWithoutClass()
+        {
+            await TestConverter(
+                @"<pre>
+line1
+line2
+</pre>",
+                @"
+```
+line1
+line2
+```
+");
+        }
+
+        [Fact]
+        public async Task ShouldConvertPreWithDefaultCodeLanguage()
+        {
+            await TestConverter(
+                @"<pre class=""code"">
+line1
+line2
+</pre>",
+                @"
+``` powershell
+line1
+line2
+```
+",
+                options: new ConversionOptions { DefaultCodeLanguage = "powershell" });
+        }
+
+        [Fact]
+        public async Task ShouldConvertPreWithMappedCodeLanguageAndCodeClass()
+        {
+            await TestConverter(
+                @"<pre class=""code cl-vb"">
+line1
+line2
+</pre>",
+                @"
+``` vbnet
+line1
+line2
+```
+",
+                options: new ConversionOptions 
+                { 
+                    DefaultCodeLanguage = "powershell",
+                    CodeLanguageClassMap = 
+                    {
+                        { "cl-vb", "vbnet" },
+                        { "cl-cs", "csharp" },
+                    }
+                });
+        }
+
+        [Fact]
+        public async Task ShouldConvertPreWithMappedCodeLanguage()
+        {
+            await TestConverter(
+                @"<pre class=""cl-vb"">
+line1
+line2
+</pre>",
+                @"
+``` vbnet
+line1
+line2
+```
+",
+                options: new ConversionOptions
+                {
+                    DefaultCodeLanguage = "powershell",
+                    CodeLanguageClassMap =
+                    {
+                        { "cl-vb", "vbnet" },
+                        { "cl-cs", "csharp" },
+                    }
+                });
+        }
+
+        [Fact]
         public async Task ShouldAddNewLinesBetweenParagraphs()
         {
             await TestConverter(

@@ -20,6 +20,12 @@ namespace Html2md
         string DefaultCodeLanguage { get; }
 
         /// <summary>
+        /// Get a map between a pre tag's class names and languages. E.g. you might map the class name "sh_csharp" to "csharp" 
+        /// and "sh_powershell" to "powershell".
+        /// </summary>
+        IDictionary<string, string> CodeLanguageClassMap { get; }
+
+        /// <summary>
         /// Gets the set of tags to include in the conversion process. If this is empty then all elements will processed.
         /// </summary>
         ISet<string> IncludeTags { get; }
