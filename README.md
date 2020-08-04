@@ -81,7 +81,7 @@ Header tags get converted to the markdown equivalent:
 ### Header 3
 ```
 
-### <table>
+### `<table>`
 
 Tables are converted, though markdown tables are much more limited than HTML tables. 
 
