@@ -2,6 +2,7 @@
 using RichardSzalay.MockHttp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -21,6 +22,31 @@ namespace Html2md.Tests.Unit
         private static readonly byte[] absoluteImageUrlDifferentDomainData = new byte[] { 2 };
         private static readonly byte[] relativeImageUrlData = new byte[] { 3 };
         private static readonly byte[] imageUrlData = new byte[] { 4 };
+
+        [Fact]
+        public async Task ShouldConvertMultipleDocumentsInOneGoAndDownloadUniqueImagesOnce()
+        {
+            await TestConverter(
+                new[]
+                {
+                    "",
+                    $@"<div>An image: <img src=""{imageUrl}"" alt=""Title"" > </div>",
+                    $@"<div>Another image: <img src=""{relativeImageUrl}"" alt=""Title"" > </div>",
+                    $@"<div>A repeated image: <img src=""{relativeImageUrl}"" alt=""Title"" > </div>"
+                },
+                new[] 
+                {
+                    "",
+                    "An image: ![Title](img.png)",
+                    "Another image: ![Title](img.png)",
+                    "A repeated image: ![Title](img.png)",
+                },
+                expectedImages: new[]
+                {
+                    new ReferencedImage(new Uri(pageUrl, imageUrl), imageUrlData),
+                    new ReferencedImage(new Uri(pageUrl, relativeImageUrl), relativeImageUrlData),
+                });
+        }
 
         [Fact]
         public async Task ShouldConvertEmptyPageToEmptyMarkdown()
@@ -255,7 +281,7 @@ para 2
                 $@"<img src=""{imageUrl}"" alt=""My image"">",
                 @"![My image](img.png)",
                 expectedImages: new[] {
-                    new ReferencedImage("img.png", imageUrlData)
+                    new ReferencedImage(new Uri(pageUrl, imageUrl), imageUrlData)
                 });
         }
 
@@ -266,7 +292,7 @@ para 2
                 $@"<img src=""{relativeImageUrl}"" alt=""My image"">",
                 @"![My image](img.png)",
                 expectedImages: new[] {
-                    new ReferencedImage("img.png", relativeImageUrlData)
+                    new ReferencedImage(new Uri(pageUrl, relativeImageUrl), relativeImageUrlData)
                 });
         }
 
@@ -277,7 +303,7 @@ para 2
                 $@"<img src=""{absoluteImageUrlSameDomain}"" alt=""My image"">",
                 @"![My image](img.png)",
                 expectedImages: new[] {
-                    new ReferencedImage("img.png", absoluteImageUrlSameDomainData)
+                    new ReferencedImage(absoluteImageUrlSameDomain, absoluteImageUrlSameDomainData)
                 });
         }
 
@@ -304,7 +330,7 @@ para 2
                 $@"<a href=""{imageUrl}"">Linked image</a>",
                 @"[Linked image](img.png)",
                 expectedImages: new[] {
-                    new ReferencedImage("img.png", imageUrlData)
+                    new ReferencedImage(new Uri(pageUrl, imageUrl), imageUrlData)
                 });
         }
 
@@ -315,7 +341,7 @@ para 2
                 $@"<a href=""{relativeImageUrl}"">Linked image</a>",
                 @"[Linked image](img.png)",
                 expectedImages: new[] {
-                    new ReferencedImage("img.png", relativeImageUrlData)
+                    new ReferencedImage(new Uri(pageUrl, relativeImageUrl), relativeImageUrlData)
                 });
         }
 
@@ -326,7 +352,7 @@ para 2
                 $@"<a href=""{absoluteImageUrlSameDomain}"">Linked image</a>",
                 @"[Linked image](img.png)",
                 expectedImages: new[] {
-                    new ReferencedImage("img.png", absoluteImageUrlSameDomainData)
+                    new ReferencedImage(absoluteImageUrlSameDomain, absoluteImageUrlSameDomainData)
                 });
         }
 
@@ -339,6 +365,33 @@ para 2
         }
 
         private static async Task TestConverter(
+            IReadOnlyList<string> pageContent,
+            IReadOnlyList<string> expectedMarkdown,
+            ConversionOptions options = null,
+            IReadOnlyList<ReferencedImage> expectedImages = null)
+        {
+            var results = await ExecuteConverter(pageContent, options);
+
+            for (var i = 0; i < pageContent.Count; i++)
+            {
+                results.Documents[i].Markdown.Should().Be(expectedMarkdown[i]);
+            }
+
+            results.Images.Should().BeEquivalentTo(expectedImages ?? Array.Empty<ReferencedImage>());
+        }
+
+        private static async Task<ConvertionResult> ExecuteConverter(IReadOnlyList<string> pageContent, ConversionOptions options = null)
+        {
+            var mockHandler = CreateMockHttpMessageHandler(pageContent.ToArray());
+
+            options ??= new ConversionOptions();
+
+            var converter = new MarkdownConverter(options, httpClient: new HttpClient(mockHandler));
+
+            return await converter.ConvertAsync(Enumerable.Range(0, pageContent.Count).Select(ConstructPageUriForIndex));
+        }
+
+        private static async Task TestConverter(
             string pageContent,
             string expectedMarkdown,
             ConversionOptions options = null,
@@ -346,11 +399,11 @@ para 2
         {
             var results = await ExecuteConverter(pageContent, options);
 
-            results.Markdown.Should().Be(expectedMarkdown);
+            results.Documents.Single().Markdown.Should().Be(expectedMarkdown);
             results.Images.Should().BeEquivalentTo(expectedImages ?? Array.Empty<ReferencedImage>());
         }
 
-        private static async Task<ConvertedDocument> ExecuteConverter(string pageContent, ConversionOptions options = null)
+        private static async Task<ConvertionResult> ExecuteConverter(string pageContent, ConversionOptions options = null)
         {
             var mockHandler = CreateMockHttpMessageHandler(pageContent);
 
@@ -361,10 +414,15 @@ para 2
             return await converter.ConvertAsync(pageUrl);
         }
 
-        private static MockHttpMessageHandler CreateMockHttpMessageHandler(string pageContent)
+        private static MockHttpMessageHandler CreateMockHttpMessageHandler(params string[] pageContent)
         {
             var mockHttp = new MockHttpMessageHandler();
-            mockHttp.When(pageUrl.AbsoluteUri).Respond("text/html", pageContent);
+
+            for (var i = 0; i < pageContent.Length; i++)
+            {
+                mockHttp.When(ConstructPageUriForIndex(i).AbsoluteUri).Respond("text/html", pageContent[i]);
+            }
+
             mockHttp.When(absoluteImageUrlDifferentDomain.AbsoluteUri).Respond(
                 r => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(absoluteImageUrlDifferentDomainData) });
             mockHttp.When(absoluteImageUrlSameDomain.AbsoluteUri).Respond(
@@ -375,6 +433,11 @@ para 2
                 r => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(imageUrlData) });
             mockHttp.When(new Uri(pageUrl, missingImageUrl).AbsoluteUri).Respond(HttpStatusCode.NotFound);
             return mockHttp;
+        }
+
+        private static Uri ConstructPageUriForIndex(int index)
+        {
+            return new Uri(pageUrl.AbsoluteUri + (index == 0 ? "" : (index + 1).ToString()));
         }
     }
 }

@@ -8,14 +8,23 @@ Convert an HTML page to markdown, including re-linking and downloading of images
 
 var converter = new MarkdownConverter(new ConversionOptions());
 
-ConvertedDocument converted = await converter.ConvertAsync("https://goatly.net/some-article");
+ConversionResult converted = await converter.ConvertAsync("https://goatly.net/some-article");
+
+// Alternatively you can convert multiple pages at once:
+
+ConversionResult converted = await converter.ConvertAsync(
+    new[] 
+    { 
+        "https://goatly.net/some-article",
+        "https://goatly.net/some-other-article",
+    });
 
 ```
 
 `ConvertedDocument` exposes:
 
-- `Markdown`: The converted markdown content
-- `Images`: A collection of images referenced in the document. Each image has a name and the images raw `byte[]` data.
+- `Documents`: The markdown representations of all the converted pages.
+- `Images`: A collection of images referenced in the documents. Each image includes the downloaded raw data as a byte array.
 
 ## Options
 

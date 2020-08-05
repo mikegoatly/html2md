@@ -14,8 +14,7 @@ namespace Html2md
         [NotNull]
         private readonly string? imageOutputLocation;
 
-        [NotNull]
-        private readonly string? url;
+        private readonly List<Uri> uris = new List<Uri>();
 
         private readonly HashSet<string> includeTags = new HashSet<string>(new[] { "body" });
         private readonly HashSet<string> excludeTags = new HashSet<string>();
@@ -60,7 +59,7 @@ namespace Html2md
 
                     case "--url":
                     case "-u":
-                        SaveArg(args, ref i, ref this.url);
+                        SaveUrlArg(args, ref i);
                         break;
 
                     case "--include-tags":
@@ -89,7 +88,7 @@ namespace Html2md
                 }
             }
 
-            if (this.outputLocation == null || this.url == null)
+            if (this.outputLocation == null || this.uris.Count == 0)
             {
                 this.ShowHelp = true;
             }
@@ -105,6 +104,18 @@ namespace Html2md
             }
 
             return args[i];
+        }
+
+        private void SaveUrlArg(string[] args, ref int i)
+        {
+            var url = GetArgParameter(args, ref i);
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                this.Error = "Invalid URI: " + url;
+                return;
+            }
+
+            this.uris.Add(uri);
         }
 
         private void SaveArg(string[] args, ref int i, ref string? arg)
@@ -167,7 +178,7 @@ namespace Html2md
 
         public string ImageOutputLocation => this.imageOutputLocation ?? this.outputLocation;
 
-        public string Url => this.url;
+        public IReadOnlyList<Uri> Uris => this.uris;
 
         public ISet<string> IncludeTags => this.includeTags;
 

@@ -1,4 +1,7 @@
-﻿namespace Html2md
+﻿using System;
+using System.IO;
+
+namespace Html2md
 {
     /// <summary>
     /// An image referenced in a converted page.
@@ -8,13 +11,19 @@
         /// <summary>
         /// Constructs a new instance of <see cref="ReferencedImage"/>.
         /// </summary>
-        /// <param name="fileName">The file name of the image.</param>
+        /// <param name="originalUri">The original URI of the image.</param>
         /// <param name="data">The raw image data.</param>
-        public ReferencedImage(string fileName, byte[] data)
+        public ReferencedImage(Uri originalUri, byte[] data)
         {
-            this.FileName = fileName;
+            this.OriginalUri = originalUri;
+            this.FileName = Path.GetFileName(originalUri.AbsoluteUri);
             this.Data = data;
         }
+
+        /// <summary>
+        /// Gets the original uri of the image.
+        /// </summary>
+        public Uri OriginalUri { get; }
 
         /// <summary>
         /// Gets the file name of the image.

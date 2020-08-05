@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.IO;
 
 namespace Html2md
 {
     public class ConvertedDocument
     {
-        public ConvertedDocument(string markdown, IReadOnlyList<ReferencedImage> collectedImages)
+        public ConvertedDocument(Uri originalLocation, string markdown)
         {
+            this.Name = Path.GetFileNameWithoutExtension(originalLocation.AbsoluteUri) + ".md";
+            this.OriginalLocation = originalLocation;
             this.Markdown = markdown;
-            this.Images = collectedImages;
         }
 
+        public string Name { get; }
+        public Uri OriginalLocation { get; }
         public string Markdown { get; }
-        public IReadOnlyList<ReferencedImage> Images { get; }
     }
 }

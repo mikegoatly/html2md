@@ -33,22 +33,47 @@ namespace Html2md
             this.httpClient = httpClient ?? new HttpClient();
         }
 
-        public async Task<ConvertedDocument> ConvertAsync(Uri url)
+        public async Task<ConvertionResult> ConvertAsync(IEnumerable<Uri> urls)
         {
-            var content = await this.httpClient.GetStringAsync(url);
-            var doc = new HtmlDocument();
+            urls = urls as IList<Uri> ?? urls.ToList();
             var builder = new StringBuilder();
-            var imageCollector = new ImageCollector(url, this.logger);
+            var imageCollector = new ImageCollector(this.logger);
+            var documents = new List<ConvertedDocument>(urls.Count());
 
-            this.logger.LogInformation("Loading page content for {PageUri}", url);
+            foreach (var url in urls)
+            {
+                documents.Add(await this.ConvertAsync(url, builder, imageCollector));
+                builder.Length = 0;
+            }
+
+            return new ConvertionResult(
+                documents,
+                await imageCollector.GetCollectedImagesAsync(this.httpClient));
+        }
+
+        public async Task<ConvertionResult> ConvertAsync(Uri url)
+        {
+            var builder = new StringBuilder();
+            var imageCollector = new ImageCollector(this.logger);
+
+            var document = await this.ConvertAsync(url, builder, imageCollector);
+
+            return new ConvertionResult(
+                new[] { document },
+                await imageCollector.GetCollectedImagesAsync(this.httpClient));
+        }
+
+        private async Task<ConvertedDocument> ConvertAsync(Uri pageUri, StringBuilder builder, ImageCollector imageCollector)
+        {
+            this.logger.LogInformation("Loading page content for {PageUri}", pageUri);
+            var content = await this.httpClient.GetStringAsync(pageUri);
+            var doc = new HtmlDocument();
             doc.LoadHtml(content);
 
             this.logger.LogDebug("Processing page content");
-            this.ProcessNode(doc.DocumentNode, builder, imageCollector, false);
+            this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, false);
 
-            return new ConvertedDocument(
-                this.RemoveRedundantWhiteSpace(builder.ToString()),
-                await imageCollector.GetCollectedImagesAsync(this.httpClient));
+            return new ConvertedDocument(pageUri, this.RemoveRedundantWhiteSpace(builder.ToString()));
         }
 
         private string RemoveRedundantWhiteSpace(string text)
@@ -56,7 +81,13 @@ namespace Html2md
             return Regex.Replace(text, "(^" + Environment.NewLine + "){2,}", Environment.NewLine, RegexOptions.Multiline);
         }
 
-        private void ProcessNode(HtmlNode node, StringBuilder builder, ImageCollector imageCollector, bool emitText, string listItemType = "-")
+        private void ProcessNode(
+            Uri pageUri,
+            HtmlNode node, 
+            StringBuilder builder, 
+            ImageCollector imageCollector, 
+            bool emitText, 
+            string listItemType = "-")
         {
             switch (node.NodeType)
             {
@@ -79,12 +110,12 @@ namespace Html2md
                             switch (node.Name)
                             {
                                 case "table":
-                                    this.EmitTable(node, builder, imageCollector);
+                                    this.EmitTable(pageUri, node, builder, imageCollector);
                                     this.EmitNewLine(builder);
                                     return;
 
                                 case "img":
-                                    this.EmitImage(node, builder, imageCollector);
+                                    this.EmitImage(pageUri, node, builder, imageCollector);
                                     return;
 
                                 case "p":
@@ -117,7 +148,7 @@ namespace Html2md
                                     break;
 
                                 case "a":
-                                    this.EmitLink(node, builder, imageCollector);
+                                    this.EmitLink(pageUri, node, builder, imageCollector);
                                     return;
 
                                 case "em":
@@ -134,7 +165,7 @@ namespace Html2md
                             }
                         }
 
-                        this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, emitText, listItemType);
+                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, emitText, listItemType);
 
                         if (emitNewLineAfterChildren)
                         {
@@ -151,15 +182,21 @@ namespace Html2md
             return this.options.IncludeTags.Count == 0 || this.options.IncludeTags.Contains(tagName);
         }
 
-        private void ProcessChildNodes(HtmlNodeCollection nodes, StringBuilder builder, ImageCollector imageCollector, bool emitText, string listItemType = "-")
+        private void ProcessChildNodes(
+            Uri pageUri,
+            HtmlNodeCollection nodes, 
+            StringBuilder builder, 
+            ImageCollector imageCollector, 
+            bool emitText, 
+            string listItemType = "-")
         {
             foreach (var childNode in nodes)
             {
-                this.ProcessNode(childNode, builder, imageCollector, emitText, listItemType);
+                this.ProcessNode(pageUri, childNode, builder, imageCollector, emitText, listItemType);
             }
         }
 
-        private void EmitImage(HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
+        private void EmitImage(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
         {
             var src = node.GetAttributeValue("src", null);
             var alt = node.GetAttributeValue("alt", "image");
@@ -171,16 +208,16 @@ namespace Html2md
             else
             {
                 var imageUri = src;
-                if (imageCollector.CanCollect(src))
+                if (imageCollector.CanCollect(pageUri, src))
                 {
-                    imageUri = this.BuildImagePath(imageCollector.Collect(src));
+                    imageUri = this.BuildImagePath(imageCollector.Collect(pageUri, src));
                 }
 
                 builder.Append("![").Append(alt).Append("](").Append(imageUri).Append(')');
             }
         }
 
-        private void EmitTable(HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
+        private void EmitTable(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
         {
             this.EmitNewLine(builder);
 
@@ -212,7 +249,7 @@ namespace Html2md
                 foreach (var cell in cells)
                 {
                     builder.Append("|");
-                    this.ProcessNode(cell, builder, imageCollector, true);
+                    this.ProcessNode(pageUri, cell, builder, imageCollector, true);
                 }
 
                 builder.AppendLine("|");
@@ -330,13 +367,13 @@ namespace Html2md
             return text;
         }
 
-        private void EmitLink(HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
+        private void EmitLink(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
         {
             var href = node.GetAttributeValue("href", null);
             if (href == null)
             {
                 this.logger.LogWarning("Anchor has missing href and will be rendered as text: {NodeHtml}", node.OuterHtml);
-                this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
+                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, true);
             }
             else
             {
@@ -344,14 +381,14 @@ namespace Html2md
                 // as if it was an img tag
                 if (contentTypeProvider.TryGetContentType(href, out var contentType) && contentType.StartsWith("image/"))
                 {
-                    if (imageCollector.CanCollect(href))
+                    if (imageCollector.CanCollect(pageUri, href))
                     {
-                        href = this.BuildImagePath(imageCollector.Collect(href));
+                        href = this.BuildImagePath(imageCollector.Collect(pageUri, href));
                     }
                 }
 
                 builder.Append($"[");
-                this.ProcessChildNodes(node.ChildNodes, builder, imageCollector, true);
+                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, true);
                 builder.Append("](").Append(href).Append(')');
             }
         }

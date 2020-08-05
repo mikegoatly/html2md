@@ -36,12 +36,14 @@ namespace Html2md
                 Directory.CreateDirectory(commandLine.OutputLocation);
                 Directory.CreateDirectory(commandLine.ImageOutputLocation);
 
-                var converted = await converter.ConvertAsync(new Uri(commandLine.Url));
+                var converted = await converter.ConvertAsync(commandLine.Uris);
 
-                var outputFileName = Path.Combine(commandLine.OutputLocation, Path.GetFileNameWithoutExtension(commandLine.Url) + ".md");
-
-                Console.WriteLine("Writing markdown file " + outputFileName);
-                await File.WriteAllTextAsync(outputFileName, converted.Markdown);
+                foreach (var document in converted.Documents)
+                {
+                    var documentFilePath = Path.Combine(commandLine.OutputLocation, document.Name);
+                    Console.WriteLine("Writing markdown file " + documentFilePath);
+                    await File.WriteAllTextAsync(documentFilePath, document.Markdown);
+                }
 
                 foreach (var image in converted.Images)
                 {
@@ -65,7 +67,7 @@ namespace Html2md
         {
             Console.WriteLine("html2md - Convert  HTML pages to markdown format");
             Console.WriteLine("-----------------");
-            Console.WriteLine("html2md --uri|-u <URI> --output|-o <OUTPUT LOCATION>");
+            Console.WriteLine("html2md --uri|-u <URI> [--uri|-u <URI> [ ... ]] --output|-o <OUTPUT LOCATION>");
             Console.WriteLine("Options:");
             Console.WriteLine();
             Console.WriteLine("--image-output|-i <IMAGE OUTPUT LOCATION>");

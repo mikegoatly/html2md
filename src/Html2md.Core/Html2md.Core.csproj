@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Html2md</RootNamespace>
 
-    <PackageId>html2md</PackageId>
+    <PackageId>Html2md.Core</PackageId>
     <Authors>Mike Goatly</Authors>
     <Description>A library capable of converting an HTML page to markdown, downloading and re-linking any associated images.</Description>
     <Copyright>Copyright Mike Goatly</Copyright>
