@@ -9,14 +9,24 @@ namespace Html2md
 {
     internal class ImageCollector
     {
-        private readonly Uri relativeUri;
+        private readonly Uri pageUri;
         private readonly ILogger logger;
         private readonly List<string> imageUris = new List<string>();
 
-        public ImageCollector(Uri relativeUri, ILogger logger)
+        public ImageCollector(Uri pageUri, ILogger logger)
         {
-            this.relativeUri = relativeUri;
+            this.pageUri = pageUri;
             this.logger = logger;
+        }
+
+        public bool CanCollect(string imageUri)
+        {
+            if (Uri.TryCreate(imageUri, UriKind.RelativeOrAbsolute, out var uri))
+            {
+                return uri.IsAbsoluteUri == false || uri.Host == pageUri.Host;
+            }
+
+            return false;
         }
 
         public string Collect(string imageUri)
@@ -33,7 +43,7 @@ namespace Html2md
                 try
                 {
                     logger.LogInformation("Loading image data for {ImageName}", image);
-                    var data = await client.GetByteArrayAsync(new Uri(this.relativeUri, image));
+                    var data = await client.GetByteArrayAsync(new Uri(this.pageUri, image));
                     collectedImages.Add(new ReferencedImage(Path.GetFileName(image), data));
                 }
                 catch (HttpRequestException ex)

@@ -170,7 +170,12 @@ namespace Html2md
             }
             else
             {
-                var imageUri = this.BuildImagePath(imageCollector.Collect(src));
+                var imageUri = src;
+                if (imageCollector.CanCollect(src))
+                {
+                    imageUri = this.BuildImagePath(imageCollector.Collect(src));
+                }
+
                 builder.Append("![").Append(alt).Append("](").Append(imageUri).Append(')');
             }
         }
@@ -339,7 +344,10 @@ namespace Html2md
                 // as if it was an img tag
                 if (contentTypeProvider.TryGetContentType(href, out var contentType) && contentType.StartsWith("image/"))
                 {
-                    href = this.BuildImagePath(imageCollector.Collect(href));
+                    if (imageCollector.CanCollect(href))
+                    {
+                        href = this.BuildImagePath(imageCollector.Collect(href));
+                    }
                 }
 
                 builder.Append($"[");

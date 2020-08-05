@@ -1,8 +1,8 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
 using RichardSzalay.MockHttp;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
@@ -12,12 +12,21 @@ namespace Html2md.Tests.Unit
     public class MarkdownConverterTests
     {
         private static readonly Uri pageUrl = new Uri("https://converttest.goatly.net/page/name");
+        private static readonly Uri absoluteImageUrlSameDomain = new Uri("https://converttest.goatly.net/images/img.png");
+        private static readonly Uri absoluteImageUrlDifferentDomain = new Uri("https://other.goatly.net/images/img.png");
+        private static readonly Uri relativeImageUrl = new Uri("../img.png", UriKind.Relative);
+        private static readonly Uri imageUrl = new Uri("/static/images/img.png", UriKind.Relative);
+        private static readonly Uri missingImageUrl = new Uri("/static/images/missing.png", UriKind.Relative);
+        private static readonly byte[] absoluteImageUrlSameDomainData = new byte[] { 1 };
+        private static readonly byte[] absoluteImageUrlDifferentDomainData = new byte[] { 2 };
+        private static readonly byte[] relativeImageUrlData = new byte[] { 3 };
+        private static readonly byte[] imageUrlData = new byte[] { 4 };
 
         [Fact]
         public async Task ShouldConvertEmptyPageToEmptyMarkdown()
         {
             await TestConverter(
-                "", 
+                "",
                 "");
         }
 
@@ -188,10 +197,10 @@ line1
 line2
 ```
 ",
-                options: new ConversionOptions 
-                { 
+                options: new ConversionOptions
+                {
                     DefaultCodeLanguage = "powershell",
-                    CodeLanguageClassMap = 
+                    CodeLanguageClassMap =
                     {
                         { "cl-vb", "vbnet" },
                         { "cl-cs", "csharp" },
@@ -239,9 +248,99 @@ para 2
 ");
         }
 
+        [Fact]
+        public async Task ShouldFetchImage()
+        {
+            await TestConverter(
+                $@"<img src=""{imageUrl}"" alt=""My image"">",
+                @"![My image](img.png)",
+                expectedImages: new[] {
+                    new ReferencedImage("img.png", imageUrlData)
+                });
+        }
+
+        [Fact]
+        public async Task ShouldFetchRelativeImage()
+        {
+            await TestConverter(
+                $@"<img src=""{relativeImageUrl}"" alt=""My image"">",
+                @"![My image](img.png)",
+                expectedImages: new[] {
+                    new ReferencedImage("img.png", relativeImageUrlData)
+                });
+        }
+
+        [Fact]
+        public async Task ShouldFetchAbsoluteImageFromSameDomain()
+        {
+            await TestConverter(
+                $@"<img src=""{absoluteImageUrlSameDomain}"" alt=""My image"">",
+                @"![My image](img.png)",
+                expectedImages: new[] {
+                    new ReferencedImage("img.png", absoluteImageUrlSameDomainData)
+                });
+        }
+
+        [Fact]
+        public async Task ShouldHandleMissingImagesByNotCollectingThem()
+        {
+            await TestConverter(
+                $@"<img src=""{missingImageUrl}"" alt=""My image"">",
+                @"![My image](missing.png)");
+        }
+
+        [Fact]
+        public async Task ShouldNotFetchAbsoluteImageFromDifferentDomain()
+        {
+            await TestConverter(
+                $@"<img src=""{absoluteImageUrlDifferentDomain}"" alt=""My image"">",
+                $@"![My image]({absoluteImageUrlDifferentDomain})");
+        }
+
+        [Fact]
+        public async Task ShouldFetchLinkedImage()
+        {
+            await TestConverter(
+                $@"<a href=""{imageUrl}"">Linked image</a>",
+                @"[Linked image](img.png)",
+                expectedImages: new[] {
+                    new ReferencedImage("img.png", imageUrlData)
+                });
+        }
+
+        [Fact]
+        public async Task ShouldFetchLinkedRelativeImage()
+        {
+            await TestConverter(
+                $@"<a href=""{relativeImageUrl}"">Linked image</a>",
+                @"[Linked image](img.png)",
+                expectedImages: new[] {
+                    new ReferencedImage("img.png", relativeImageUrlData)
+                });
+        }
+
+        [Fact]
+        public async Task ShouldFetchLinkedAbsoluteImageFromSameDomain()
+        {
+            await TestConverter(
+                $@"<a href=""{absoluteImageUrlSameDomain}"">Linked image</a>",
+                @"[Linked image](img.png)",
+                expectedImages: new[] {
+                    new ReferencedImage("img.png", absoluteImageUrlSameDomainData)
+                });
+        }
+
+        [Fact]
+        public async Task ShouldNotFetchLinkedAbsoluteImageFromDifferentDomain()
+        {
+            await TestConverter(
+                $@"<a href=""{absoluteImageUrlDifferentDomain}"">Linked image</a>",
+                $@"[Linked image]({absoluteImageUrlDifferentDomain})");
+        }
+
         private static async Task TestConverter(
-            string pageContent, 
-            string expectedMarkdown, 
+            string pageContent,
+            string expectedMarkdown,
             ConversionOptions options = null,
             IReadOnlyList<ReferencedImage> expectedImages = null)
         {
@@ -253,15 +352,29 @@ para 2
 
         private static async Task<ConvertedDocument> ExecuteConverter(string pageContent, ConversionOptions options = null)
         {
-            var mockHttp = new MockHttpMessageHandler();
-            mockHttp.When(pageUrl.AbsoluteUri)
-                .Respond("text/html", pageContent);
+            var mockHandler = CreateMockHttpMessageHandler(pageContent);
 
             options ??= new ConversionOptions();
 
-            var converter = new MarkdownConverter(options, httpClient: new HttpClient(mockHttp));
+            var converter = new MarkdownConverter(options, httpClient: new HttpClient(mockHandler));
 
             return await converter.ConvertAsync(pageUrl);
+        }
+
+        private static MockHttpMessageHandler CreateMockHttpMessageHandler(string pageContent)
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp.When(pageUrl.AbsoluteUri).Respond("text/html", pageContent);
+            mockHttp.When(absoluteImageUrlDifferentDomain.AbsoluteUri).Respond(
+                r => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(absoluteImageUrlDifferentDomainData) });
+            mockHttp.When(absoluteImageUrlSameDomain.AbsoluteUri).Respond(
+                r => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(absoluteImageUrlSameDomainData) });
+            mockHttp.When(new Uri(pageUrl, relativeImageUrl).AbsoluteUri).Respond(
+                r => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(relativeImageUrlData) });
+            mockHttp.When(new Uri(pageUrl, imageUrl).AbsoluteUri).Respond(
+                r => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(imageUrlData) });
+            mockHttp.When(new Uri(pageUrl, missingImageUrl).AbsoluteUri).Respond(HttpStatusCode.NotFound);
+            return mockHttp;
         }
     }
 }
