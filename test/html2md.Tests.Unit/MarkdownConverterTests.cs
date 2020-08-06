@@ -65,10 +65,26 @@ namespace Html2md.Tests.Unit
         }
 
         [Fact]
+        public async Task ShouldConvertItalic()
+        {
+            await TestConverter(
+                "<i>test</i>",
+                "*test*");
+        }
+
+        [Fact]
         public async Task ShouldConvertStrong()
         {
             await TestConverter(
                 "<strong>test</strong>",
+                "**test**");
+        }
+
+        [Fact]
+        public async Task ShouldConvertBold()
+        {
+            await TestConverter(
+                "<b>test</b>",
                 "**test**");
         }
 

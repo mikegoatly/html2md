@@ -151,10 +151,12 @@ namespace Html2md
                                     this.EmitLink(pageUri, node, builder, imageCollector);
                                     return;
 
+                                case "i":
                                 case "em":
                                     this.EmitFormattedText(node, builder, "*");
                                     return;
 
+                                case "b":
                                 case "strong":
                                     this.EmitFormattedText(node, builder, "**");
                                     return;

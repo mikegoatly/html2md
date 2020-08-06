@@ -1,4 +1,5 @@
 using FluentAssertions;
+using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -29,7 +30,7 @@ namespace Html2md.Tests.Unit
 
             sut.Error.Should().BeNull();
             sut.OutputLocation.Should().Be("c:\\test\\output");
-            sut.Url.Should().Be("http://goatly.net");
+            sut.Uris.Should().BeEquivalentTo(new Uri("http://goatly.net"));
             sut.ImageOutputLocation.Should().Be("c:\\test\\images");
             sut.ShowHelp.Should().BeFalse();
             sut.CodeLanguageClassMap.Should().BeEquivalentTo(
@@ -53,8 +54,25 @@ namespace Html2md.Tests.Unit
             });
 
             sut.OutputLocation.Should().Be("c:\\test\\output");
-            sut.Url.Should().Be("http://goatly.net");
+            sut.Uris.Should().BeEquivalentTo(new Uri("http://goatly.net"));
             sut.ImageOutputLocation.Should().Be("c:\\test\\images");
+            sut.ShowHelp.Should().BeFalse();
+        }
+
+        [Fact]
+        public void WithMultipleUris_ShouldSetValuesCorrectly()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net",
+                "-u",
+                "http://goatly.net/page2"
+            });
+
+            sut.OutputLocation.Should().Be("c:\\test\\output");
+            sut.Uris.Should().BeEquivalentTo(new Uri("http://goatly.net"), new Uri("http://goatly.net/page2"));
             sut.ShowHelp.Should().BeFalse();
         }
 
