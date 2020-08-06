@@ -73,6 +73,43 @@ namespace Html2md.Tests.Unit
         }
 
         [Fact]
+        public async Task ShouldOnlyProcessIncludedTags()
+        {
+            await TestConverter(
+                "<body><aside><i>Should be ignored</i></aside><article><em>Should appear</em></article></body>",
+                "*Should appear*",
+                options: new ConversionOptions
+                {
+                    IncludeTags = { "article" }
+                });
+        }
+
+        [Fact]
+        public async Task ShouldNotProcessExcludedTags()
+        {
+            await TestConverter(
+                "<body><aside><i>Should be ignored</i></aside><article><em>Should appear</em></article></body>",
+                "*Should appear*",
+                options: new ConversionOptions
+                {
+                    ExcludeTags = { "aside" }
+                });
+        }
+
+        [Fact]
+        public async Task ShouldNotProcessExcludedTagsEvenIfContainedInIncludedTags()
+        {
+            await TestConverter(
+                "<body><aside><i>Should be ignored</i></aside><article><em>Should appear</em><aside>IGNORED</aside></article></body>",
+                "*Should appear*",
+                options: new ConversionOptions
+                {
+                    IncludeTags = { "article" },
+                    ExcludeTags = { "aside" }
+                });
+        }
+
+        [Fact]
         public async Task ShouldConvertStrong()
         {
             await TestConverter(
