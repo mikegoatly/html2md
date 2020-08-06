@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30317.65
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F6102019-0A4B-414C-B3C8-F79CF3BA373A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Html2md", "src\html2md\Html2md.csproj", "{7A24D522-173E-44A3-B585-0E58DE308F3A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Html2md", "src\Html2md\Html2md.csproj", "{7A24D522-173E-44A3-B585-0E58DE308F3A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{295FC185-B03D-42D9-BA98-405C1C1A3F2D}"
 EndProject
