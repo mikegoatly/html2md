@@ -17,7 +17,12 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
-    - name: Build
-      run: dotnet build --configuration Release 
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --verbosity normal
+    - name: Package library nuget package
+      run: dotnet pack src/Html2md.Core/Html2md.Core.csproj --output nuget-packages --configuration Release
+    - name: Package dotnet tool nuget package
+      run: dotnet pack src/Html2md/Html2md.csproj --output nuget-packages --configuration Release
+    - name: Push packages
+      run: dotnet nuget push nuget-packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
