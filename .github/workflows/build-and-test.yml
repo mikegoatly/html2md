@@ -19,10 +19,12 @@ jobs:
         dotnet-version: 3.1.301
     - name: Test
       run: dotnet test --verbosity normal
-    - name: Package library nuget package
+    - name: Package library
       run: dotnet pack src/Html2md.Core/Html2md.Core.csproj --output nuget-packages --configuration Release
-    - name: Package dotnet tool nuget package
+    - name: Package dotnet tool
       run: dotnet pack src/Html2md/Html2md.csproj --output nuget-packages --configuration Release
-    - name: Push packages
-      run: dotnet nuget push nuget-packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+    - name: Push library package
+      run: dotnet nuget push nuget-packages/Html2md.Core.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    - name: Push dotnet tool package
+      run: dotnet nuget push nuget-packages/dotnet-html2md.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
