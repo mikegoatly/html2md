@@ -24,7 +24,7 @@ jobs:
     - name: Package dotnet tool
       run: dotnet pack src/Html2md/Html2md.csproj --output nuget-packages --configuration Release
     - name: Push library package
-      run: dotnet nuget push nuget-packages/Html2md.Core.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push nuget-packages/Html2md.Core.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
     - name: Push dotnet tool package
-      run: dotnet nuget push nuget-packages/dotnet-html2md.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push nuget-packages/dotnet-html2md.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
