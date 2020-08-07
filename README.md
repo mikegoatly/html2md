@@ -4,7 +4,45 @@
 
 Convert an HTML page to markdown, including re-linking and downloading of images.
 
-## Example
+## Usage as a dotnet tool
+
+``` powershell
+dotnet tool install dotnet-html2md -g
+```
+
+Usage:
+
+```
+html2md --uri|-u <URI> [--uri|-u <URI> [ ... ]] --output|-o <OUTPUT LOCATION>
+
+Options:
+
+--image-output|-i <IMAGE OUTPUT LOCATION>
+If no image output location is specified then they will be written to the same folder as the markdown file.
+
+--include-tags|--it|-t <COMMA SEPARATED TAG LIST>
+If unspecified the entire body tag will be processed, otherwise only text contained in the specified tags will be processed.
+
+--exclude-tags|--et|-e <COMMA SEPARATED TAG LIST>
+Allows for specific tags to be ignored.
+
+--image-path-prefix|--ipp <IMAGE PATH PREFIX>
+The prefix to apply to all rendered image URLs - helpful when you're going to be serving images from a different location, relative or absolute.
+
+--default-code-language <LANGUAGE>
+The default language to use on code blocks converted from pre tags - defaults to csharp
+
+--code-language-class-map <CLASSNAME:LANGUAGE,CLASSNAME:LANGUAGE,...>
+Map between a pre tag's class names and languages. E.g. you might map the class name "sh_csharp" to "csharp" and "sh_powershell" to "powershell".
+```
+
+## Usage as a nuget package
+
+``` powershell
+Install-Package Html2md.Core
+```
+
+### Example
 
 ``` csharp
 
@@ -28,7 +66,7 @@ ConversionResult converted = await converter.ConvertAsync(
 - `Documents`: The markdown representations of all the converted pages.
 - `Images`: A collection of images referenced in the documents. Each image includes the downloaded raw data as a byte array.
 
-## Options
+### Options
 
 In `ConversionOptions` you can specify:
 
