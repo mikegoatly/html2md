@@ -85,6 +85,9 @@ namespace Html2md
             Console.WriteLine("--default-code-language <LANGUAGE>");
             Console.WriteLine("The default language to use on code blocks converted from pre tags - defaults to csharp");
             Console.WriteLine();
+            Console.WriteLine("--code-language-class-map <CLASSNAME:LANGUAGE,CLASSNAME:LANGUAGE,...>");
+            Console.WriteLine("Map between a pre tag's class names and languages. E.g. you might map the class name \"sh_csharp\" to \"csharp\" and \"sh_powershell\" to \"powershell\".");
+            Console.WriteLine();
         }
     }
 }
