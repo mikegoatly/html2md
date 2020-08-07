@@ -1,4 +1,6 @@
-# html2md
+# Html2md
+
+![Build and test](https://github.com/mikegoatly/html2md/workflows/Build%20and%20test/badge.svg)
 
 Convert an HTML page to markdown, including re-linking and downloading of images.
 
