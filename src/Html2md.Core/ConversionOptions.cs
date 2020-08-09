@@ -19,5 +19,8 @@ namespace Html2md
 
         /// <inheritdoc />
         public IDictionary<string, string> CodeLanguageClassMap { get; set; } = new Dictionary<string, string>();
+
+        /// <inheritdoc />
+        public FrontMatterOptions FrontMatter { get; set; } = new FrontMatterOptions();
     }
 }

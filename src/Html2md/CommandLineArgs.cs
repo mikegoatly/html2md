@@ -52,6 +52,20 @@ namespace Html2md
                         SaveArg(args, ref i, ref this.imageOutputLocation);
                         break;
 
+                    case "--front-matter-delimiter":
+                        this.FrontMatter.Delimiter = GetArgParameter(args, ref i) ?? this.FrontMatter.Delimiter;
+                        break;
+
+                    case "--front-matter-data":
+                        AddArg(args, ref i, this.FrontMatter.SingleValueProperties);
+                        this.FrontMatter.Enabled = true;
+                        break;
+
+                    case "--front-matter-data-list":
+                        AddArg(args, ref i, this.FrontMatter.ArrayValueProperties);
+                        this.FrontMatter.Enabled = true;
+                        break;
+
                     case "--image-path-prefix":
                     case "--ipp":
                         SaveArg(args, ref i, ref this.imagePathPrefix!);
@@ -65,13 +79,13 @@ namespace Html2md
                     case "--include-tags":
                     case "--it":
                     case "-t":
-                        SaveArg(args, ref i, ref this.includeTags);
+                        AddArg(args, ref i, ref this.includeTags);
                         break;
 
                     case "--exclude-tags":
                     case "--et":
                     case "-e":
-                        SaveArg(args, ref i, ref this.excludeTags);
+                        AddArg(args, ref i, ref this.excludeTags);
                         break;
 
                     case "--code-language-class-map":
@@ -123,12 +137,31 @@ namespace Html2md
             arg = GetArgParameter(args, ref i);
         }
 
-        private void SaveArg(string[] args, ref int i, ref HashSet<string> arg)
+        private void AddArg(string[] args, ref int i, ref HashSet<string> arg)
         {
             var argValue = GetArgParameter(args, ref i);
             if (argValue != null)
             {
                 arg = args[i].Split(",", StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+            }
+        }
+
+        private void AddArg(string[] args, ref int i, Dictionary<string, string> arg)
+        {
+            var argIndex = i;
+            var argValue = GetArgParameter(args, ref i);
+            if (argValue != null)
+            {
+                var pair = argValue.Split(":");
+
+                if (pair.Length != 2)
+                {
+                    this.Error = "Malformed argument value for " + args[argIndex];
+                }
+                else
+                {
+                    arg[pair[0]] = pair[1];
+                }
             }
         }
 
@@ -185,5 +218,7 @@ namespace Html2md
         public ISet<string> ExcludeTags => this.excludeTags;
 
         public IDictionary<string, string> CodeLanguageClassMap => this.codeLanguageClassMap;
+
+        public FrontMatterOptions FrontMatter { get; } = new FrontMatterOptions();
     }
 }

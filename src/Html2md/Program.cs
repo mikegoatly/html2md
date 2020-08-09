@@ -88,6 +88,17 @@ namespace Html2md
             Console.WriteLine("--code-language-class-map <CLASSNAME:LANGUAGE,CLASSNAME:LANGUAGE,...>");
             Console.WriteLine("Map between a pre tag's class names and languages. E.g. you might map the class name \"sh_csharp\" to \"csharp\" and \"sh_powershell\" to \"powershell\".");
             Console.WriteLine();
+            Console.WriteLine("--front-matter-data <PROPERTY:[XPATH|{{MACRO}}|{{\"CONSTANT\"}}]>");
+            Console.WriteLine("Allows for configuration of information to be extracted to a Front Matter property. This can be an XPath to an element or attribute in the HTML page, a string constant or a supported macro.");
+            Console.WriteLine("Supported macros:");
+            Console.WriteLine("RelativeUriPath: The relative path of the page being converted. e.g. for https://example.com/pages/page-1 the macro would return /pages/page-1");
+            Console.WriteLine();
+            Console.WriteLine("--front-matter-data-list <PROPERTY:XPATH>");
+            Console.WriteLine("Allows for configuration of list-based information to be extracted to a Front Matter property.");
+            Console.WriteLine();
+            Console.WriteLine("--front-matter-delimiter <DELIMITER>");
+            Console.WriteLine("The delimiter to write out for the Front Matter section of the converted document. The default is ---");
+            Console.WriteLine();
         }
     }
 }

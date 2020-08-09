@@ -57,6 +57,28 @@ namespace Html2md.Tests.Unit
         }
 
         [Fact]
+        public async Task ShouldApplyFrontMatterWhenConfigured()
+        {
+            await TestConverter(
+                "<body><h1>Doc title</h1><p>test</p></body>",
+                @"---
+Title: Doc title
+---
+test
+
+",
+                new ConversionOptions
+                {
+                    ExcludeTags = { "h1" },
+                    FrontMatter =
+                    {
+                        Enabled = true,
+                        SingleValueProperties = { { "Title", "/body/h1" } }
+                    }
+                });
+        }
+
+        [Fact]
         public async Task ShouldConvertEm()
         {
             await TestConverter(

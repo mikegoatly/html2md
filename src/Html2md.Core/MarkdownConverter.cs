@@ -20,6 +20,7 @@ namespace Html2md
         private readonly IConversionOptions options;
         private readonly ILogger logger;
         private readonly HttpClient httpClient;
+        private readonly FrontMatterExtractor frontMatterExtractor = new FrontMatterExtractor();
 
         public MarkdownConverter(IConversionOptions options, ILogger? logger = null)
             : this(options, null, logger)
@@ -69,6 +70,12 @@ namespace Html2md
             var content = await this.httpClient.GetStringAsync(pageUri);
             var doc = new HtmlDocument();
             doc.LoadHtml(content);
+
+            var frontMatter = this.frontMatterExtractor.Extract(this.options.FrontMatter, doc, pageUri);
+            if (frontMatter != null)
+            {
+                builder.Append(frontMatter);
+            }
 
             this.logger.LogDebug("Processing page content");
             this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, false);
