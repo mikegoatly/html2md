@@ -48,7 +48,7 @@ namespace Html2md
         {
             if (xpathOrMacro.StartsWith("{{"))
             {
-                if (Regex.IsMatch(xpathOrMacro, @"^{{""[^""]*""}}$"))
+                if (Regex.IsMatch(xpathOrMacro, @"^{{'[^']*'}}$"))
                 {
                     return xpathOrMacro.Substring(3, xpathOrMacro.Length - 6);
                 }

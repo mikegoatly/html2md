@@ -125,7 +125,7 @@ generator: Orchard
                     Enabled = true,
                     SingleValueProperties =
                     {
-                        { "author", @"{{""Mike Goatly""}}" }
+                        { "author", @"{{'Mike Goatly'}}" }
                     }
                 },
                 testPage,

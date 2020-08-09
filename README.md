@@ -2,7 +2,10 @@
 
 ![Build and test](https://github.com/mikegoatly/html2md/workflows/Build%20and%20test/badge.svg)
 
-Convert an HTML page to markdown, including re-linking and downloading of images.
+Reverse engineer markdown from an HTML page, including:
+
+- Re-linking and downloading of images
+- Front Matter metadata generation
 
 ## Usage as a dotnet tool
 
@@ -27,13 +30,28 @@ If unspecified the entire body tag will be processed, otherwise only text contai
 Allows for specific tags to be ignored.
 
 --image-path-prefix|--ipp <IMAGE PATH PREFIX>
-The prefix to apply to all rendered image URLs - helpful when you're going to be serving images from a different location, relative or absolute.
+The prefix to apply to all rendered image URLs - helpful when you're going to be serving images from a 
+different location, relative or absolute.
 
 --default-code-language <LANGUAGE>
 The default language to use on code blocks converted from pre tags - defaults to csharp
 
 --code-language-class-map <CLASSNAME:LANGUAGE,CLASSNAME:LANGUAGE,...>
-Map between a pre tag's class names and languages. E.g. you might map the class name "sh_csharp" to "csharp" and "sh_powershell" to "powershell".
+Map between a pre tag's class names and languages. E.g. you might map the class name "sh_csharp" to "csharp" 
+and "sh_powershell" to "powershell".
+
+--front-matter-data <PROPERTY:[XPATH|{{MACRO}}|{{'CONSTANT'}}]>
+Allows for configuration of information to be extracted to a Front Matter property. This can be an XPath to an element 
+or attribute in the HTML page, a string constant or a supported macro.
+Supported macros:
+RelativeUriPath: The relative path of the page being converted. e.g. for https://example.com/pages/page-1 the macro would 
+return /pages/page-1
+
+--front-matter-data-list <PROPERTY:XPATH>
+Allows for configuration of list-based information to be extracted to a Front Matter property.
+
+--front-matter-delimiter <DELIMITER>
+The delimiter to write out for the Front Matter section of the converted document. The default is ---
 ```
 
 ## Usage as a nuget package
@@ -61,7 +79,50 @@ ConversionResult converted = await converter.ConvertAsync(
 
 ```
 
-`ConvertedDocument` exposes:
+You can also extract Front Matter metadata:
+
+``` csharp
+
+var options = new ConversionOptions
+{
+    FrontMatter =
+    {
+        Enabled = true,
+        SingleValueProperties = 
+        {
+            { "Title", "//h1" },
+            { "Author", "{{'Mike Goatly'}}" },
+            { "RedirectFrom", @"{{RelativeUriPath}}" }
+        },
+        ArrayValueProperties = 
+        {
+            { "Tags", @"//p[@class='tags']/a" }
+        }
+    }
+}
+
+var converter = new MarkdownConverter(options);
+
+ConversionResult converted = await converter.ConvertAsync("https://goatly.net/some-article");
+
+```
+
+Where the resulting markdown would be:
+
+```
+---
+Title: Article Title
+Author: Mike Goatly
+RedirectFrom: /some-article
+Tags:
+  - Help
+  - Coding
+---
+```
+
+### `ConvertedDocument`
+
+`ConvertedDocument` is the result of a conversion process, containing:
 
 - `Documents`: The markdown representations of all the converted pages.
 - `Images`: A collection of images referenced in the documents. Each image includes the downloaded raw data as a byte array.
@@ -78,14 +139,22 @@ The default is `csharp`.
 - `ExcludeTags`: The set of tags to exclude from the conversion process. You can use this if there are certain parts of
 a document you don't want translating to markdown, e.g. aside, nav, etc.
 - `CodeLanguageClassMap`: A dictionary mapping between class names that can appear on `pre` tags and the language they map to.E.g. you might map the class name "sh_csharp" to "csharp" and "sh_powershell" to "powershell".
+- `FrontMatter`: Configuration for how Front Matter metadata should be emitted into a converted document.
+  - `Enabled`: Whether Front Matter metadata should be emitted. Defaults to `false`.
+  - `Delimiter`: The delimiter to write to the Front Matter section. Defaults to `---`.
+  - `SingleValueProperties`: Configuration of information to be extracted to a Front Matter property. This can be an XPath to an element 
+or attribute in the HTML page, a string constant or a supported macro. Supported macros:
+    - RelativeUriPath: The relative path of the page being converted. e.g. for https://example.com/pages/page-1 the macro would 
+return /pages/page-1
+  - `ArrayValueProperties`: Configuration of list-based information to be extracted to a Front Matter property.
 
 ## Converted content
 
-### `<em>`
+### `<em>` and `<i>`
 
 `<em>italic</em>` becomes `*italic*`
 
-### `<strong>`
+### `<strong>` and `<b>`
 
 `<strong>bold</strong>` becomes `**bold**`
 
