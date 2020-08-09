@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Html2md
 {
@@ -35,5 +34,10 @@ namespace Html2md
         /// a document you don't want translating to markdown, e.g. aside, nav, etc.
         /// </summary>
         ISet<string> ExcludeTags { get; }
+
+        /// <summary>
+        /// Gets the FrontMatter configuration to apply to the conversion process.
+        /// </summary>
+        FrontMatterOptions FrontMatter { get; }
     }
 }

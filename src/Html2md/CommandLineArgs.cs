@@ -185,5 +185,7 @@ namespace Html2md
         public ISet<string> ExcludeTags => this.excludeTags;
 
         public IDictionary<string, string> CodeLanguageClassMap => this.codeLanguageClassMap;
+
+        public FrontMatterOptions FrontMatter { get; } = new FrontMatterOptions();
     }
 }
