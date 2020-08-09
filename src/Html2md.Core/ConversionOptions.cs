@@ -21,6 +21,6 @@ namespace Html2md
         public IDictionary<string, string> CodeLanguageClassMap { get; set; } = new Dictionary<string, string>();
 
         /// <inheritdoc />
-        public FrontMatterOptions FrontMatter => throw new System.NotImplementedException();
+        public FrontMatterOptions FrontMatter { get; set; } = new FrontMatterOptions();
     }
 }

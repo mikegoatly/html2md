@@ -42,6 +42,78 @@ namespace Html2md.Tests.Unit
         }
 
         [Fact]
+        public void WithFrontMatterData_ShouldSetParameterAndEnableFrontMatter()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net",
+                "--front-matter-data",
+                "title://h1",
+            });
+
+            sut.FrontMatter.Enabled.Should().BeTrue();
+            sut.FrontMatter.SingleValueProperties.Should().BeEquivalentTo(
+                new Dictionary<string, string>
+                {
+                   { "title", "//h1" }
+                });
+            sut.FrontMatter.ArrayValueProperties.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void WithFrontMatterListData_ShouldSetParameterAndEnableFrontMatter()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net",
+                "--front-matter-data-list",
+                "title://h1",
+            });
+
+            sut.FrontMatter.Enabled.Should().BeTrue();
+            sut.FrontMatter.SingleValueProperties.Should().BeEmpty();
+            sut.FrontMatter.ArrayValueProperties.Should().BeEquivalentTo(
+                new Dictionary<string, string>
+                {
+                   { "title", "//h1" }
+                });
+        }
+
+        [Fact]
+        public void WithNoFrontMatterData_ShouldLeaveFrontMatterConfigDisabledWithDefaultDelmiter()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net"
+            });
+
+            sut.FrontMatter.Enabled.Should().BeFalse();
+            sut.FrontMatter.Delimiter.Should().Be("---");
+        }
+
+        [Fact]
+        public void WithCustomFrontMatterDelimiter_ShouldSetParameterAccordingly()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net",
+                "--front-matter-delimiter",
+                "~~~"
+            });
+
+            sut.FrontMatter.Enabled.Should().BeFalse();
+            sut.FrontMatter.Delimiter.Should().Be("~~~");
+        }
+
+        [Fact]
         public void WithAbbreviatedArgumentNames_ShouldSetValuesCorrectly()
         {
             var sut = new CommandLineArgs(new[] {
