@@ -168,6 +168,51 @@ test
         }
 
         [Fact]
+        public async Task ShouldConvertUnorderedListNestedInUnorderedList()
+        {
+            await TestConverter(
+                "<ul><li>One</li><li>Two</li><ul><li>TwoPointOne</li><li>TwoPointTwo</li></ul><li>Three</li></ul>",
+                @"
+- One
+- Two
+    - TwoPointOne
+    - TwoPointTwo
+- Three
+
+");
+        }
+
+        [Fact]
+        public async Task ShouldConvertUnorderedListNestedInOrderedList()
+        {
+            await TestConverter(
+                "<ol><li>One</li><li>Two</li><ul><li>TwoPointOne</li><li>TwoPointTwo</li></ul><li>Three</li></ol>",
+                @"
+1. One
+1. Two
+    - TwoPointOne
+    - TwoPointTwo
+1. Three
+
+");
+        }
+
+        [Fact]
+        public async Task ShouldConvertOrderedListNestedInOrderedList()
+        {
+            await TestConverter(
+                "<ol><li>One</li><li>Two</li><ol><li>TwoPointOne</li><li>TwoPointTwo</li></ol><li>Three</li></ol>",
+                @"
+1. One
+1. Two
+    1. TwoPointOne
+    1. TwoPointTwo
+1. Three
+
+");
+        }
+
+        [Fact]
         public async Task ShouldConvertSimpleOrderedList()
         {
             await TestConverter(

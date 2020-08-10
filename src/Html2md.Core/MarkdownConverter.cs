@@ -14,6 +14,49 @@ using System.Web;
 
 namespace Html2md
 {
+    public class ConversionState
+    {
+        public ConversionState()
+        {
+        }
+
+        private ConversionState(ConversionState previous)
+        {
+            this.EmitText = previous.EmitText;
+            this.ListDepth = previous.ListDepth;
+            this.ListItemPrefix = previous.ListItemPrefix;
+        }
+
+        public string? ListItemPrefix { get; private set; }
+
+        public bool EmitText { get; private set; }
+
+        public int ListDepth { get; private set; }
+
+        public ConversionState WithEmitText(bool emitText)
+        {
+            return new ConversionState(this) { EmitText = emitText };
+        }
+
+        public ConversionState StartOrderedList()
+        {
+            return new ConversionState(this)
+            {
+                ListDepth = this.ListDepth + 1,
+                ListItemPrefix = "1."
+            };
+        }
+
+        public ConversionState StartUnorderedList()
+        {
+            return new ConversionState(this)
+            {
+                ListDepth = this.ListDepth + 1,
+                ListItemPrefix = "-"
+            };
+        }
+    }
+
     public class MarkdownConverter
     {
         private static readonly FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
@@ -78,7 +121,7 @@ namespace Html2md
             }
 
             this.logger.LogDebug("Processing page content");
-            this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, false);
+            this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, new ConversionState());
 
             return new ConvertedDocument(pageUri, this.RemoveRedundantWhiteSpace(builder.ToString()));
         }
@@ -90,16 +133,15 @@ namespace Html2md
 
         private void ProcessNode(
             Uri pageUri,
-            HtmlNode node, 
-            StringBuilder builder, 
-            ImageCollector imageCollector, 
-            bool emitText, 
-            string listItemType = "-")
+            HtmlNode node,
+            StringBuilder builder,
+            ImageCollector imageCollector,
+            ConversionState conversionState)
         {
             switch (node.NodeType)
             {
                 case HtmlNodeType.Text:
-                    if (emitText)
+                    if (conversionState.EmitText)
                     {
                         builder.Append(this.ExtractText(node));
                     }
@@ -111,13 +153,17 @@ namespace Html2md
                     if (!this.options.ExcludeTags.Contains(node.Name))
                     {
                         var emitNewLineAfterChildren = false;
-                        emitText = emitText || this.IsIncludedTag(node.Name);
-                        if (emitText)
+                        if (this.IsIncludedTag(node.Name))
+                        {
+                            conversionState = conversionState.WithEmitText(true);
+                        }
+
+                        if (conversionState.EmitText)
                         {
                             switch (node.Name)
                             {
                                 case "table":
-                                    this.EmitTable(pageUri, node, builder, imageCollector);
+                                    this.EmitTable(pageUri, node, builder, imageCollector, conversionState);
                                     this.EmitNewLine(builder);
                                     return;
 
@@ -130,17 +176,17 @@ namespace Html2md
                                     break;
 
                                 case "ul":
-                                    listItemType = "-";
-                                    emitNewLineAfterChildren = true;
+                                    conversionState = conversionState.StartUnorderedList();
+                                    emitNewLineAfterChildren = conversionState.ListDepth == 1;
                                     break;
 
                                 case "ol":
-                                    listItemType = "1.";
-                                    emitNewLineAfterChildren = true;
+                                    conversionState = conversionState.StartOrderedList();
+                                    emitNewLineAfterChildren = conversionState.ListDepth == 1;
                                     break;
 
                                 case "li":
-                                    this.EmitListItemPrefix(builder, listItemType);
+                                    this.EmitListItemPrefix(builder, conversionState);
                                     break;
 
                                 case "h1":
@@ -155,7 +201,7 @@ namespace Html2md
                                     break;
 
                                 case "a":
-                                    this.EmitLink(pageUri, node, builder, imageCollector);
+                                    this.EmitLink(pageUri, node, builder, imageCollector, conversionState);
                                     return;
 
                                 case "i":
@@ -174,7 +220,7 @@ namespace Html2md
                             }
                         }
 
-                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, emitText, listItemType);
+                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, conversionState);
 
                         if (emitNewLineAfterChildren)
                         {
@@ -193,15 +239,14 @@ namespace Html2md
 
         private void ProcessChildNodes(
             Uri pageUri,
-            HtmlNodeCollection nodes, 
-            StringBuilder builder, 
-            ImageCollector imageCollector, 
-            bool emitText, 
-            string listItemType = "-")
+            HtmlNodeCollection nodes,
+            StringBuilder builder,
+            ImageCollector imageCollector,
+            ConversionState conversionState)
         {
             foreach (var childNode in nodes)
             {
-                this.ProcessNode(pageUri, childNode, builder, imageCollector, emitText, listItemType);
+                this.ProcessNode(pageUri, childNode, builder, imageCollector, conversionState);
             }
         }
 
@@ -226,7 +271,7 @@ namespace Html2md
             }
         }
 
-        private void EmitTable(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
+        private void EmitTable(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState conversionState)
         {
             this.EmitNewLine(builder);
 
@@ -258,7 +303,7 @@ namespace Html2md
                 foreach (var cell in cells)
                 {
                     builder.Append("|");
-                    this.ProcessNode(pageUri, cell, builder, imageCollector, true);
+                    this.ProcessNode(pageUri, cell, builder, imageCollector, conversionState);
                 }
 
                 builder.AppendLine("|");
@@ -306,9 +351,17 @@ namespace Html2md
             builder.AppendLine(endofLineText);
         }
 
-        private void EmitListItemPrefix(StringBuilder builder, string listItemType)
+        private void EmitListItemPrefix(StringBuilder builder, ConversionState conversionState)
         {
-            builder.AppendLine().Append(listItemType).Append(" ");
+            builder.AppendLine();
+
+            if (conversionState.ListDepth > 1)
+            {
+                builder.Append(' ', 4 * (conversionState.ListDepth - 1));
+            }
+
+            builder.Append(conversionState.ListItemPrefix ?? "-")
+                .Append(" ");
         }
 
         private void EmitNewLine(StringBuilder builder)
@@ -381,13 +434,13 @@ namespace Html2md
             return text;
         }
 
-        private void EmitLink(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector)
+        private void EmitLink(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState conversionState)
         {
             var href = node.GetAttributeValue("href", null);
             if (href == null)
             {
                 this.logger.LogWarning("Anchor has missing href and will be rendered as text: {NodeHtml}", node.OuterHtml);
-                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, true);
+                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, conversionState);
             }
             else
             {
@@ -402,7 +455,7 @@ namespace Html2md
                 }
 
                 builder.Append($"[");
-                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, true);
+                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, conversionState);
                 builder.Append("](").Append(href).Append(')');
             }
         }
