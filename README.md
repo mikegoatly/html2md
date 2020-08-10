@@ -52,6 +52,9 @@ Allows for configuration of list-based information to be extracted to a Front Ma
 
 --front-matter-delimiter <DELIMITER>
 The delimiter to write out for the Front Matter section of the converted document. The default is ---
+
+--logging <None|Trace|Debug|Information|Warning|Error|Critical>
+By default no logging takes place - you can turn on logging at different levels with this flag.
 ```
 
 ## Usage as a nuget package
