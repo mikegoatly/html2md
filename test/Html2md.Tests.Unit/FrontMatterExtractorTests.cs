@@ -97,6 +97,44 @@ title: Adding Application Insights to an existing Windows Store project using Vi
         }
 
         [Fact]
+        public void ShouldNotMapValueIfElementNotFound()
+        {
+            this.RunFrontMatterTest(
+                new FrontMatterOptions()
+                {
+                    Enabled = true,
+                    SingleValueProperties =
+                    {
+                        { "generator", "//article/header/h9" }
+                    }
+                },
+                testPage,
+                testPageUri,
+                @"---
+---
+");
+        }
+
+        [Fact]
+        public void ShouldNotMapArrayIfElementsNotFound()
+        {
+            this.RunFrontMatterTest(
+                new FrontMatterOptions()
+                {
+                    Enabled = true,
+                    ArrayValueProperties =
+                    {
+                        { "generator", "//article/header/h9" }
+                    }
+                },
+                testPage,
+                testPageUri,
+                @"---
+---
+");
+        }
+
+        [Fact]
         public void ShouldMapAttributeValuesForSingleProperties()
         {
             this.RunFrontMatterTest(

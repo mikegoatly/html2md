@@ -19,19 +19,29 @@ namespace Html2md
 
             foreach (var singleValue in options.SingleValueProperties)
             {
-                builder
-                    .Append(singleValue.Key)
-                    .Append(": ")
-                    .AppendLine(ExtractValue(singleValue.Value, document, pageUri));
+                var value = ExtractValue(singleValue.Value, document, pageUri);
+                if (value != null)
+                {
+                    builder
+                        .Append(singleValue.Key)
+                        .Append(": ")
+                        .AppendLine(value);
+                }
             }
 
-            foreach (var singleValue in options.ArrayValueProperties)
+            foreach (var arrayValue in options.ArrayValueProperties)
             {
+                var matches = document.DocumentNode.SelectNodes(arrayValue.Value);
+                if (matches == null)
+                {
+                    continue;
+                }
+
                 builder
-                    .Append(singleValue.Key)
+                    .Append(arrayValue.Key)
                     .AppendLine(":");
 
-                foreach (var match in document.DocumentNode.SelectNodes(singleValue.Value))
+                foreach (var match in matches)
                 {
                     builder
                         .Append("  - ")
@@ -44,7 +54,7 @@ namespace Html2md
             return builder.ToString();
         }
 
-        private static string ExtractValue(string xpathOrMacro, HtmlDocument document, Uri pageUri)
+        private static string? ExtractValue(string xpathOrMacro, HtmlDocument document, Uri pageUri)
         {
             if (xpathOrMacro.StartsWith("{{"))
             {
@@ -62,6 +72,11 @@ namespace Html2md
             else
             {
                 var node = document.DocumentNode.SelectSingleNode(xpathOrMacro);
+                if (node == null)
+                {
+                    return null;
+                }
+
                 var attributeName = Regex.Match(xpathOrMacro, @"/@(\w+)$");
                 if (attributeName.Success)
                 {
