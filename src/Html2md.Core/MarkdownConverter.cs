@@ -348,7 +348,7 @@ namespace Html2md
             }
 
             builder.AppendLine(language)
-                .AppendLine(HttpUtility.HtmlDecode(this.ExtractText(node, removeOnlyLeadingAndTrailingNewLines: true)))
+                .AppendLine(HttpUtility.HtmlDecode(this.ExtractText(node, trimNewLines: true, escapeMarkDownCharacters: false)))
                 .AppendLine("```");
         }
 
@@ -360,17 +360,22 @@ namespace Html2md
                 .Append(wrapWith);
         }
 
-        private string ExtractText(HtmlNode node, bool removeOnlyLeadingAndTrailingNewLines = false)
+        private string ExtractText(HtmlNode node, bool trimNewLines = false, bool escapeMarkDownCharacters = true)
         {
             var text = node.InnerText;
-            if (removeOnlyLeadingAndTrailingNewLines)
+            if (trimNewLines)
             {
-                return text.Trim('\r', '\n');
+                text = text.Trim('\r', '\n');
             }
 
             if (string.IsNullOrWhiteSpace(text))
             {
                 return string.Empty;
+            }
+
+            if (escapeMarkDownCharacters)
+            {
+                text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
             }
 
             return text;

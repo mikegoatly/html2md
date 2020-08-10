@@ -132,6 +132,14 @@ test
         }
 
         [Fact]
+        public async Task ShouldEscapeMarkdownCommands()
+        {
+            await TestConverter(
+                "<strong>\\`*_{}[]()#+-.!</strong>",
+                "**\\\\\\`\\*\\_\\{\\}\\[\\]\\(\\)\\#\\+\\-\\.\\!**");
+        }
+
+        [Fact]
         public async Task ShouldConvertStrong()
         {
             await TestConverter(
@@ -221,8 +229,8 @@ test
                     $@"
 |Col 1|Col 2|
 |-|-|
-|1-1|1-2|
-|2-1|2-2|
+|1\-1|1\-2|
+|2\-1|2\-2|
 
 ");
         }
@@ -244,9 +252,9 @@ test
     </tbody>
 </table>",
                     $@"
-|1-1|1-2|
+|1\-1|1\-2|
 |-|-|
-|2-1|2-2|
+|2\-1|2\-2|
 
 ");
         }
