@@ -8,6 +8,7 @@
             this.ListDepth = previous.ListDepth;
             this.ListItemPrefix = previous.ListItemPrefix;
             this.EmitMarkDownStyles = previous.EmitMarkDownStyles;
+            this.LinePrefix = previous.LinePrefix;
             this.EmitHtmlDecodedText = previous.EmitHtmlDecodedText;
         }
 
@@ -25,6 +26,8 @@
         public int ListDepth { get; private set; }
 
         public bool EmitHtmlDecodedText { get; private set; }
+
+        public string? LinePrefix { get; private set; }
 
         public ConversionState WithRenderingEnabled()
         {
@@ -60,6 +63,14 @@
             {
                 ListDepth = this.ListDepth + 1,
                 ListItemPrefix = "-"
+            };
+        }
+
+        public ConversionState WithLinePrefix(string prefix)
+        {
+            return new ConversionState(this)
+            {
+                LinePrefix = prefix
             };
         }
     }

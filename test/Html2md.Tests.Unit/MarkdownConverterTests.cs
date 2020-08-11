@@ -452,6 +452,46 @@ para 2
         }
 
         [Fact]
+        public async Task ShouldConvertSingleLineBlockquote()
+        {
+            await TestConverter(
+                @"<blockquote>text</blockquote>",
+                @"
+> text
+
+");
+        }
+
+        [Fact]
+        public async Task ShouldConvertMultiLineBlockquote()
+        {
+            await TestConverter(
+                @"<blockquote>text
+text</blockquote>",
+                @"
+> text
+text
+
+");
+        }
+
+        [Fact]
+        public async Task ShouldConvertBlockquoteWithParagraphs()
+        {
+            await TestConverter(
+                @"<blockquote><p>text</p>
+<p>text</p></blockquote>",
+                @"
+> text
+> 
+> text
+> 
+> 
+
+");
+        }
+
+        [Fact]
         public async Task ShouldFetchImage()
         {
             await TestConverter(

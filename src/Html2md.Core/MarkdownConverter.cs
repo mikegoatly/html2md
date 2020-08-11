@@ -117,6 +117,7 @@ namespace Html2md
                             state = state.WithRenderingEnabled();
                         }
 
+                        ConversionState? childState = null;
                         if (state.RenderingEnabled)
                         {
                             if (state.EmitMarkDownStyles)
@@ -125,7 +126,7 @@ namespace Html2md
                                 {
                                     case "table":
                                         this.EmitTable(pageUri, node, builder, imageCollector, state);
-                                        this.EmitNewLine(builder);
+                                        this.EmitNewLine(builder, state);
                                         return;
 
                                     case "img":
@@ -138,6 +139,13 @@ namespace Html2md
 
                                     case "br":
                                         builder.AppendLine();
+                                        break;
+
+                                    case "blockquote":
+                                        childState = state.WithLinePrefix(state.LinePrefix ?? "" + ">");
+                                        this.EmitNewLine(builder, state);
+                                        builder.Append(childState?.LinePrefix).Append(" ");
+                                        emitNewLineAfterChildren = true;
                                         break;
 
                                     case "ul":
@@ -160,7 +168,7 @@ namespace Html2md
                                     case "h4":
                                     case "h5":
                                     case "h6":
-                                        this.EmitNewLine(builder);
+                                        this.EmitNewLine(builder, state);
                                         emitNewLineAfterChildren = true;
                                         builder.Append('#', node.Name[1] - '0').Append(' ');
                                         break;
@@ -195,11 +203,11 @@ namespace Html2md
                             }
                         }
 
-                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state);
+                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, childState ?? state);
 
                         if (emitNewLineAfterChildren)
                         {
-                            this.EmitNewLine(builder);
+                            this.EmitNewLine(builder, state);
                         }
                     }
 
@@ -248,7 +256,7 @@ namespace Html2md
 
         private void EmitTable(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state)
         {
-            this.EmitNewLine(builder);
+            this.EmitNewLine(builder, state);
 
             var (headers, skipFirstRow) = this.GetTableHeaders(node, state);
 
@@ -339,9 +347,20 @@ namespace Html2md
                 .Append(" ");
         }
 
-        private void EmitNewLine(StringBuilder builder)
+        private void EmitNewLine(StringBuilder builder, ConversionState state)
         {
-            builder.AppendLine().AppendLine();
+            if (state.LinePrefix != null)
+            {
+                builder.AppendLine()
+                    .Append(state.LinePrefix)
+                    .AppendLine(" ")
+                    .Append(state.LinePrefix)
+                    .Append(' ');
+            }
+            else
+            {
+                builder.AppendLine().AppendLine();
+            }
         }
 
         private void EmitPreformattedText(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state)
@@ -367,7 +386,7 @@ namespace Html2md
 
         private void EmitPreformattedText(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state, string language)
         {
-            this.EmitNewLine(builder);
+            this.EmitNewLine(builder, state);
 
             builder.Append("```");
             if (language.Length > 0)
@@ -403,7 +422,6 @@ namespace Html2md
             {
                 return string.Empty;
             }
-
 
             // Escape markdown characters
             text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
