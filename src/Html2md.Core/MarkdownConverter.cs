@@ -14,49 +14,6 @@ using System.Web;
 
 namespace Html2md
 {
-    public class ConversionState
-    {
-        public ConversionState()
-        {
-        }
-
-        private ConversionState(ConversionState previous)
-        {
-            this.EmitText = previous.EmitText;
-            this.ListDepth = previous.ListDepth;
-            this.ListItemPrefix = previous.ListItemPrefix;
-        }
-
-        public string? ListItemPrefix { get; private set; }
-
-        public bool EmitText { get; private set; }
-
-        public int ListDepth { get; private set; }
-
-        public ConversionState WithEmitText(bool emitText)
-        {
-            return new ConversionState(this) { EmitText = emitText };
-        }
-
-        public ConversionState StartOrderedList()
-        {
-            return new ConversionState(this)
-            {
-                ListDepth = this.ListDepth + 1,
-                ListItemPrefix = "1."
-            };
-        }
-
-        public ConversionState StartUnorderedList()
-        {
-            return new ConversionState(this)
-            {
-                ListDepth = this.ListDepth + 1,
-                ListItemPrefix = "-"
-            };
-        }
-    }
-
     public class MarkdownConverter
     {
         private static readonly FileExtensionContentTypeProvider contentTypeProvider = new FileExtensionContentTypeProvider();
@@ -121,14 +78,16 @@ namespace Html2md
             }
 
             this.logger.LogDebug("Processing page content");
-            this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, new ConversionState());
+            this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, ConversionState.InitialState);
 
             return new ConvertedDocument(pageUri, this.RemoveRedundantWhiteSpace(builder.ToString()));
         }
 
         private string RemoveRedundantWhiteSpace(string text)
         {
-            return Regex.Replace(text, "(^" + Environment.NewLine + "){2,}", Environment.NewLine, RegexOptions.Multiline);
+            text = Regex.Replace(text, "(^" + Environment.NewLine + "){2,}", Environment.NewLine, RegexOptions.Multiline);
+            text = Regex.Replace(text, "(^```.*)(" + Environment.NewLine + "){2,}", "$1" + Environment.NewLine, RegexOptions.Multiline);
+            return text;
         }
 
         private void ProcessNode(
@@ -136,12 +95,12 @@ namespace Html2md
             HtmlNode node,
             StringBuilder builder,
             ImageCollector imageCollector,
-            ConversionState conversionState)
+            ConversionState state)
         {
             switch (node.NodeType)
             {
                 case HtmlNodeType.Text:
-                    if (conversionState.EmitText)
+                    if (state.RenderingEnabled)
                     {
                         builder.Append(this.ExtractText(node));
                     }
@@ -155,72 +114,88 @@ namespace Html2md
                         var emitNewLineAfterChildren = false;
                         if (this.IsIncludedTag(node.Name))
                         {
-                            conversionState = conversionState.WithEmitText(true);
+                            state = state.WithRenderingEnabled();
                         }
 
-                        if (conversionState.EmitText)
+                        if (state.RenderingEnabled)
                         {
-                            switch (node.Name)
+                            if (state.EmitMarkDownStyles)
                             {
-                                case "table":
-                                    this.EmitTable(pageUri, node, builder, imageCollector, conversionState);
-                                    this.EmitNewLine(builder);
-                                    return;
+                                switch (node.Name)
+                                {
+                                    case "table":
+                                        this.EmitTable(pageUri, node, builder, imageCollector, state);
+                                        this.EmitNewLine(builder);
+                                        return;
 
-                                case "img":
-                                    this.EmitImage(pageUri, node, builder, imageCollector);
-                                    return;
+                                    case "img":
+                                        this.EmitImage(pageUri, node, builder, imageCollector);
+                                        return;
 
-                                case "p":
-                                    emitNewLineAfterChildren = true;
-                                    break;
+                                    case "p":
+                                        emitNewLineAfterChildren = true;
+                                        break;
 
-                                case "ul":
-                                    conversionState = conversionState.StartUnorderedList();
-                                    emitNewLineAfterChildren = conversionState.ListDepth == 1;
-                                    break;
+                                    case "br":
+                                        builder.AppendLine();
+                                        break;
 
-                                case "ol":
-                                    conversionState = conversionState.StartOrderedList();
-                                    emitNewLineAfterChildren = conversionState.ListDepth == 1;
-                                    break;
+                                    case "ul":
+                                        state = state.StartUnorderedList();
+                                        emitNewLineAfterChildren = state.ListDepth == 1;
+                                        break;
 
-                                case "li":
-                                    this.EmitListItemPrefix(builder, conversionState);
-                                    break;
+                                    case "ol":
+                                        state = state.StartOrderedList();
+                                        emitNewLineAfterChildren = state.ListDepth == 1;
+                                        break;
 
-                                case "h1":
-                                case "h2":
-                                case "h3":
-                                case "h4":
-                                case "h5":
-                                case "h6":
-                                    this.EmitNewLine(builder);
-                                    emitNewLineAfterChildren = true;
-                                    builder.Append('#', node.Name[1] - '0').Append(' ');
-                                    break;
+                                    case "li":
+                                        this.EmitListItemPrefix(builder, state);
+                                        break;
 
-                                case "a":
-                                    this.EmitLink(pageUri, node, builder, imageCollector, conversionState);
-                                    return;
+                                    case "h1":
+                                    case "h2":
+                                    case "h3":
+                                    case "h4":
+                                    case "h5":
+                                    case "h6":
+                                        this.EmitNewLine(builder);
+                                        emitNewLineAfterChildren = true;
+                                        builder.Append('#', node.Name[1] - '0').Append(' ');
+                                        break;
 
-                                case "i":
-                                case "em":
-                                    this.EmitFormattedText(node, builder, "*");
-                                    return;
+                                    case "a":
+                                        this.EmitLink(pageUri, node, builder, imageCollector, state);
+                                        return;
 
-                                case "b":
-                                case "strong":
-                                    this.EmitFormattedText(node, builder, "**");
-                                    return;
+                                    case "i":
+                                    case "em":
+                                        this.EmitFormattedText(node, builder, "*");
+                                        return;
 
-                                case "pre":
-                                    this.EmitPreformattedText(node, builder);
-                                    return;
+                                    case "b":
+                                    case "strong":
+                                        this.EmitFormattedText(node, builder, "**");
+                                        return;
+
+                                    case "pre":
+                                        this.EmitPreformattedText(pageUri, node, builder, imageCollector, state);
+                                        return;
+                                }
+                            }
+                            else
+                            {
+                                switch (node.Name)
+                                {
+                                    case "br":
+                                        builder.AppendLine();
+                                        break;
+                                }
                             }
                         }
 
-                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, conversionState);
+                        this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state);
 
                         if (emitNewLineAfterChildren)
                         {
@@ -242,11 +217,11 @@ namespace Html2md
             HtmlNodeCollection nodes,
             StringBuilder builder,
             ImageCollector imageCollector,
-            ConversionState conversionState)
+            ConversionState state)
         {
             foreach (var childNode in nodes)
             {
-                this.ProcessNode(pageUri, childNode, builder, imageCollector, conversionState);
+                this.ProcessNode(pageUri, childNode, builder, imageCollector, state);
             }
         }
 
@@ -271,7 +246,7 @@ namespace Html2md
             }
         }
 
-        private void EmitTable(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState conversionState)
+        private void EmitTable(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state)
         {
             this.EmitNewLine(builder);
 
@@ -303,7 +278,7 @@ namespace Html2md
                 foreach (var cell in cells)
                 {
                     builder.Append("|");
-                    this.ProcessNode(pageUri, cell, builder, imageCollector, conversionState);
+                    this.ProcessNode(pageUri, cell, builder, imageCollector, state);
                 }
 
                 builder.AppendLine("|");
@@ -351,16 +326,16 @@ namespace Html2md
             builder.AppendLine(endofLineText);
         }
 
-        private void EmitListItemPrefix(StringBuilder builder, ConversionState conversionState)
+        private void EmitListItemPrefix(StringBuilder builder, ConversionState state)
         {
             builder.AppendLine();
 
-            if (conversionState.ListDepth > 1)
+            if (state.ListDepth > 1)
             {
-                builder.Append(' ', 4 * (conversionState.ListDepth - 1));
+                builder.Append(' ', 4 * (state.ListDepth - 1));
             }
 
-            builder.Append(conversionState.ListItemPrefix ?? "-")
+            builder.Append(state.ListItemPrefix ?? "-")
                 .Append(" ");
         }
 
@@ -369,28 +344,28 @@ namespace Html2md
             builder.AppendLine().AppendLine();
         }
 
-        private void EmitPreformattedText(HtmlNode node, StringBuilder builder)
+        private void EmitPreformattedText(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state)
         {
             foreach (var className in node.GetClasses())
             {
                 if (this.options.CodeLanguageClassMap.TryGetValue(className, out var language))
                 {
-                    this.EmitPreformattedText(node, builder, language);
+                    this.EmitPreformattedText(pageUri, node, builder, imageCollector, state, language);
                     return;
                 }
             }
 
             if (node.HasClass("code"))
             {
-                this.EmitPreformattedText(node, builder, this.options.DefaultCodeLanguage);
+                this.EmitPreformattedText(pageUri, node, builder, imageCollector, state, this.options.DefaultCodeLanguage);
             }
             else
             {
-                this.EmitPreformattedText(node, builder, string.Empty);
+                this.EmitPreformattedText(pageUri, node, builder, imageCollector, state, string.Empty);
             }
         }
 
-        private void EmitPreformattedText(HtmlNode node, StringBuilder builder, string language)
+        private void EmitPreformattedText(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state, string language)
         {
             this.EmitNewLine(builder);
 
@@ -400,9 +375,16 @@ namespace Html2md
                 builder.Append(" ");
             }
 
-            builder.AppendLine(language)
-                .AppendLine(HttpUtility.HtmlDecode(this.ExtractText(node, trimNewLines: true, escapeMarkDownCharacters: false)))
-                .AppendLine("```");
+            builder.AppendLine(language);
+
+            this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state.WithoutMarkdownStyling());
+
+            if (!builder.EndsWithNewLine())
+            {
+                builder.AppendLine();
+            }
+
+            builder.AppendLine("```");
         }
 
         private void EmitFormattedText(HtmlNode node, StringBuilder builder, string wrapWith)
@@ -434,13 +416,13 @@ namespace Html2md
             return text;
         }
 
-        private void EmitLink(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState conversionState)
+        private void EmitLink(Uri pageUri, HtmlNode node, StringBuilder builder, ImageCollector imageCollector, ConversionState state)
         {
             var href = node.GetAttributeValue("href", null);
             if (href == null)
             {
                 this.logger.LogWarning("Anchor has missing href and will be rendered as text: {NodeHtml}", node.OuterHtml);
-                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, conversionState);
+                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state);
             }
             else
             {
@@ -455,7 +437,7 @@ namespace Html2md
                 }
 
                 builder.Append($"[");
-                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, conversionState);
+                this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state);
                 builder.Append("](").Append(href).Append(')');
             }
         }

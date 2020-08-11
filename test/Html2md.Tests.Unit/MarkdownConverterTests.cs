@@ -213,6 +213,19 @@ test
         }
 
         [Fact]
+        public async Task ShouldConvertBrTagsInPreTag()
+        {
+            await TestConverter(
+                "<pre>line 1<br />line 2</pre>",
+                @"
+```
+line 1
+line 2
+```
+");
+        }
+
+        [Fact]
         public async Task ShouldConvertSimpleOrderedList()
         {
             await TestConverter(
@@ -325,6 +338,24 @@ line2
         {
             await TestConverter(
                 @"<pre class=""code"">
+line1
+line2
+</pre>",
+                @"
+``` powershell
+line1
+line2
+```
+",
+                options: new ConversionOptions { DefaultCodeLanguage = "powershell" });
+        }
+
+        [Fact]
+        public async Task ShouldStripLeadingAndTrailingReturnsFromPreContent()
+        {
+            await TestConverter(
+                @"<pre class=""code"">
+
 line1
 line2
 </pre>",
