@@ -369,6 +369,24 @@ line2
         }
 
         [Fact]
+        public async Task ShouldHtmlDecodePreTagContents()
+        {
+            await TestConverter(
+                @"<pre class=""code"">
+
+&nbsp;&lt;line1&gt;
+&nbsp;line2
+</pre>",
+                @"
+``` powershell
+ <line1>
+ line2
+```
+",
+                options: new ConversionOptions { DefaultCodeLanguage = "powershell" });
+        }
+
+        [Fact]
         public async Task ShouldConvertPreWithMappedCodeLanguageAndCodeClass()
         {
             await TestConverter(

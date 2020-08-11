@@ -102,7 +102,7 @@ namespace Html2md
                 case HtmlNodeType.Text:
                     if (state.RenderingEnabled)
                     {
-                        builder.Append(this.ExtractText(node));
+                        builder.Append(this.ExtractText(node, state));
                     }
 
                     break;
@@ -171,12 +171,12 @@ namespace Html2md
 
                                     case "i":
                                     case "em":
-                                        this.EmitFormattedText(node, builder, "*");
+                                        this.EmitFormattedText(node, builder, "*", state);
                                         return;
 
                                     case "b":
                                     case "strong":
-                                        this.EmitFormattedText(node, builder, "**");
+                                        this.EmitFormattedText(node, builder, "**", state);
                                         return;
 
                                     case "pre":
@@ -250,7 +250,7 @@ namespace Html2md
         {
             this.EmitNewLine(builder);
 
-            var (headers, skipFirstRow) = this.GetTableHeaders(node);
+            var (headers, skipFirstRow) = this.GetTableHeaders(node, state);
 
             foreach (var header in headers)
             {
@@ -285,7 +285,7 @@ namespace Html2md
             }
         }
 
-        private (IReadOnlyList<string> headers, bool skipFirstRow) GetTableHeaders(HtmlNode node)
+        private (IReadOnlyList<string> headers, bool skipFirstRow) GetTableHeaders(HtmlNode node, ConversionState state)
         {
             var headRow = node.SelectSingleNode("thead/tr");
             var skipFirstRow = false;
@@ -299,7 +299,7 @@ namespace Html2md
                 (
                     (headRow.SelectNodes("td") ?? Enumerable.Empty<HtmlNode>())
                         .Concat(headRow.SelectNodes("th") ?? Enumerable.Empty<HtmlNode>())
-                        .Select(n => this.ExtractText(n))
+                        .Select(n => this.ExtractText(n, state))
                         .ToList(),
                     skipFirstRow
                 );
@@ -377,7 +377,7 @@ namespace Html2md
 
             builder.AppendLine(language);
 
-            this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state.WithoutMarkdownStyling());
+            this.ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state.StartPreformattedTextBlock());
 
             if (!builder.EndsWithNewLine())
             {
@@ -387,30 +387,30 @@ namespace Html2md
             builder.AppendLine("```");
         }
 
-        private void EmitFormattedText(HtmlNode node, StringBuilder builder, string wrapWith)
+        private void EmitFormattedText(HtmlNode node, StringBuilder builder, string wrapWith, ConversionState state)
         {
             builder
                 .Append(wrapWith)
-                .Append(this.ExtractText(node))
+                .Append(this.ExtractText(node, state))
                 .Append(wrapWith);
         }
 
-        private string ExtractText(HtmlNode node, bool trimNewLines = false, bool escapeMarkDownCharacters = true)
+        private string ExtractText(HtmlNode node, ConversionState state)
         {
             var text = node.InnerText;
-            if (trimNewLines)
-            {
-                text = text.Trim('\r', '\n');
-            }
 
             if (string.IsNullOrWhiteSpace(text))
             {
                 return string.Empty;
             }
 
-            if (escapeMarkDownCharacters)
+
+            // Escape markdown characters
+            text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
+
+            if (state.EmitHtmlDecodedText)
             {
-                text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
+                text = HttpUtility.HtmlDecode(text);
             }
 
             return text;

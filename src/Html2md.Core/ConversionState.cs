@@ -8,6 +8,7 @@
             this.ListDepth = previous.ListDepth;
             this.ListItemPrefix = previous.ListItemPrefix;
             this.EmitMarkDownStyles = previous.EmitMarkDownStyles;
+            this.EmitHtmlDecodedText = previous.EmitHtmlDecodedText;
         }
 
         public static ConversionState InitialState { get; } = new ConversionState
@@ -23,6 +24,8 @@
 
         public int ListDepth { get; private set; }
 
+        public bool EmitHtmlDecodedText { get; private set; }
+
         public ConversionState WithRenderingEnabled()
         {
             if (this.RenderingEnabled)
@@ -33,12 +36,12 @@
             return new ConversionState(this) { RenderingEnabled = true };
         }
 
-        public ConversionState WithoutMarkdownStyling()
+        public ConversionState StartPreformattedTextBlock()
         {
             return new ConversionState(this)
             {
-                ListDepth = this.ListDepth + 1,
-                ListItemPrefix = "1."
+                EmitMarkDownStyles = false,
+                EmitHtmlDecodedText = true
             };
         }
 
