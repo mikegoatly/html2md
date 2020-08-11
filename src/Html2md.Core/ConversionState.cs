@@ -9,7 +9,6 @@
             this.ListItemPrefix = previous.ListItemPrefix;
             this.EmitMarkDownStyles = previous.EmitMarkDownStyles;
             this.LinePrefix = previous.LinePrefix;
-            this.EmitHtmlDecodedText = previous.EmitHtmlDecodedText;
         }
 
         public static ConversionState InitialState { get; } = new ConversionState
@@ -24,8 +23,6 @@
         public bool EmitMarkDownStyles { get; private set; }
 
         public int ListDepth { get; private set; }
-
-        public bool EmitHtmlDecodedText { get; private set; }
 
         public string? LinePrefix { get; private set; }
 
@@ -43,8 +40,7 @@
         {
             return new ConversionState(this)
             {
-                EmitMarkDownStyles = false,
-                EmitHtmlDecodedText = true
+                EmitMarkDownStyles = false
             };
         }
 

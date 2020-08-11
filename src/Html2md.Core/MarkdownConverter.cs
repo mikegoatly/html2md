@@ -423,13 +423,13 @@ namespace Html2md
                 return string.Empty;
             }
 
-            // Escape markdown characters
-            text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
-
-            if (state.EmitHtmlDecodedText)
+            if (state.EmitMarkDownStyles)
             {
-                text = HttpUtility.HtmlDecode(text);
+                // Escape markdown characters that may clash
+                text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
             }
+
+            text = HttpUtility.HtmlDecode(text);
 
             return text;
         }

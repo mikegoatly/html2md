@@ -13,7 +13,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/mikegoatly/html2md</PackageProjectUrl>
     <PackageTags>convert-html convert-markdown html markdown conversion</PackageTags>
-    <Version>1.1.4</Version>
+    <Version>1.1.5</Version>
     <RepositoryUrl>https://github.com/mikegoatly/html2md</RepositoryUrl>
     <PackageReleaseNotes>Added support for extracting Front Matter metadata</PackageReleaseNotes>
   </PropertyGroup>

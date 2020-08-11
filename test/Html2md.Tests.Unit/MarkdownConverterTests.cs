@@ -79,6 +79,14 @@ test
         }
 
         [Fact]
+        public async Task ShouldDecodeHtmlInMarkdownText()
+        {
+            await TestConverter(
+                "<em>test&apos;s</em>",
+                "*test's*");
+        }
+
+        [Fact]
         public async Task ShouldConvertEm()
         {
             await TestConverter(
@@ -263,7 +271,7 @@ line 2
         }
 
         [Fact]
-        public async Task ShouldConverTableWithHeaderRow()
+        public async Task ShouldConvertTableWithHeaderRow()
         {
             await TestConverter(
                     @"<table>
@@ -294,7 +302,7 @@ line 2
         }
 
         [Fact]
-        public async Task ShouldConverTableWithNoHeaderRowUsingFirstRowAsHeader()
+        public async Task ShouldConvertTableWithNoHeaderRowUsingFirstRowAsHeader()
         {
             await TestConverter(
                     @"<table>
@@ -381,6 +389,21 @@ line2
 ``` powershell
  <line1>
  line2
+```
+",
+                options: new ConversionOptions { DefaultCodeLanguage = "powershell" });
+        }
+
+        [Fact]
+        public async Task ShouldNotEscapeMarkdownCharactersInPreTags()
+        {
+            await TestConverter(
+                @"<pre class=""code"">
+-- A comment
+</pre>",
+                @"
+``` powershell
+-- A comment
 ```
 ",
                 options: new ConversionOptions { DefaultCodeLanguage = "powershell" });
