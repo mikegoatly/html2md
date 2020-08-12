@@ -73,7 +73,29 @@ test
                     FrontMatter =
                     {
                         Enabled = true,
-                        SingleValueProperties = { { "Title", "/body/h1" } }
+                        SingleValueProperties = { { "Title", new PropertyMatchExpression("/body/h1") } }
+                    }
+                });
+        }
+
+        [Fact]
+        public async Task ShouldConvertFrontMatterPropertyToData()
+        {
+            await TestConverter(
+                "<body><h1>Thursday, August 7, 2014 11:55:08 AM</h1><p>test</p></body>",
+                @"---
+Title: 2014-08-07T11:55:08.0000000
+---
+test
+
+",
+                new ConversionOptions
+                {
+                    ExcludeTags = { "h1" },
+                    FrontMatter =
+                    {
+                        Enabled = true,
+                        SingleValueProperties = { { "Title", new PropertyMatchExpression("/body/h1", PropertyDataType.Date) } }
                     }
                 });
         }

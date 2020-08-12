@@ -31,7 +31,8 @@ namespace Html2md
 
             foreach (var arrayValue in options.ArrayValueProperties)
             {
-                var matches = document.DocumentNode.SelectNodes(arrayValue.Value);
+                var format = arrayValue.Value.DataType;
+                var matches = document.DocumentNode.SelectNodes(arrayValue.Value.XpathOrMacro);
                 if (matches == null)
                 {
                     continue;
@@ -45,7 +46,7 @@ namespace Html2md
                 {
                     builder
                         .Append("  - ")
-                        .AppendLine(match.GetDirectInnerText().Trim());
+                        .AppendLine(FormatValue(match.GetDirectInnerText().Trim(), format));
                 }
             }
 
@@ -54,36 +55,65 @@ namespace Html2md
             return builder.ToString();
         }
 
-        private static string? ExtractValue(string xpathOrMacro, HtmlDocument document, Uri pageUri)
+        private static string? ExtractValue(PropertyMatchExpression matchExpression, HtmlDocument document, Uri pageUri)
         {
+            var xpathOrMacro = matchExpression.XpathOrMacro;
+            string? text = null;
             if (xpathOrMacro.StartsWith("{{"))
             {
                 if (Regex.IsMatch(xpathOrMacro, @"^{{'[^']*'}}$"))
                 {
-                    return xpathOrMacro.Substring(3, xpathOrMacro.Length - 6);
+                    text = xpathOrMacro[3..^3];
                 }
-
-                return xpathOrMacro switch
+                else
                 {
-                    "{{RelativeUriPath}}" => pageUri.LocalPath,
-                    _ => throw new Exception("Unknown macro " + xpathOrMacro),
-                };
+                    text = xpathOrMacro switch
+                    {
+                        "{{RelativeUriPath}}" => pageUri.LocalPath,
+                        _ => throw new Exception("Unknown macro " + xpathOrMacro),
+                    };
+                }
             }
             else
             {
                 var node = document.DocumentNode.SelectSingleNode(xpathOrMacro);
-                if (node == null)
+                if (node != null)
                 {
-                    return null;
+                    var attributeName = Regex.Match(xpathOrMacro, @"/@(\w+)$");
+                    if (attributeName.Success)
+                    {
+                        text = node.GetAttributeValue(attributeName.Groups[1].Value, string.Empty).Trim();
+                    }
+                    else
+                    {
+                        text = node.GetDirectInnerText().Trim();
+                    }
                 }
+            }
 
-                var attributeName = Regex.Match(xpathOrMacro, @"/@(\w+)$");
-                if (attributeName.Success)
-                {
-                    return node.GetAttributeValue(attributeName.Groups[1].Value, string.Empty).Trim();
-                }
+            if (text == null)
+            {
+                return null;
+            }
 
-                return node.GetDirectInnerText().Trim();
+            return FormatValue(text, matchExpression.DataType);
+        }
+
+        private static string FormatValue(string text, PropertyDataType dataType)
+        {
+            switch (dataType)
+            {
+                case PropertyDataType.Any:
+                    return text;
+                case PropertyDataType.Date:
+                    if (DateTime.TryParse(text, out var dateTime))
+                    {
+                        return dateTime.ToString("O");
+                    }
+
+                    return text;
+                default:
+                    throw new ArgumentException("Unknown property data type: " + dataType, nameof(dataType));
             }
         }
     }

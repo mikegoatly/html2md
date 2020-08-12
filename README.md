@@ -2,6 +2,9 @@
 
 ![Build and test](https://github.com/mikegoatly/html2md/workflows/Build%20and%20test/badge.svg)
 
+> This is a project I'm using to migrate content - it may or may not do exactly what you want for 
+your content, but hopefully it's useful.
+
 Reverse engineer markdown from an HTML page, including:
 
 - Re-linking and downloading of images
@@ -47,8 +50,9 @@ Supported macros:
 RelativeUriPath: The relative path of the page being converted. e.g. for https://example.com/pages/page-1 the macro would 
 return /pages/page-1
 
---front-matter-data-list <PROPERTY:XPATH>
-Allows for configuration of list-based information to be extracted to a Front Matter property.
+--front-matter-data-list <PROPERTY:XPATH[:Date]>
+Allows for configuration of list-based information to be extracted to a Front Matter property. You can optionally specify
+that the data should be formatted as a date. (Values not convertable to dates will be rendered as-is.)
 
 --front-matter-delimiter <DELIMITER>
 The delimiter to write out for the Front Matter section of the converted document. The default is ---
@@ -191,6 +195,34 @@ Paragraph tags cause an additional new line to be inserted after the paragraph's
 para 1
 
 para 2
+```
+
+### `<blockquote>`
+
+`<blockquote>quoted text</blockquote>` becomes:
+
+``` markdown
+> quoted text
+```
+
+Nested styling is also supported, though you'll currently get additional lines if you use multiple paragraphs. This 
+doesn't seem to bother any renderers I've seen so far:
+
+``` html
+<blockquote>
+    <p>Para 1</p>
+    <p>Para 2</p>
+</blockquote>
+```
+
+becomes:
+
+``` markdown
+> Para 1
+>
+> Para 2
+>
+>
 ```
 
 ### `<h1>` ... `<h6>`

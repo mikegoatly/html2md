@@ -62,8 +62,8 @@ namespace Html2md.Tests.Unit
                     Enabled = true,
                     SingleValueProperties =
                     {
-                        { "title", "//article/header/h1" },
-                        { "firsttag", "//p[@class='tags']/a" }
+                        { "title", new PropertyMatchExpression("//article/header/h1") },
+                        { "firsttag", new PropertyMatchExpression("//p[@class='tags']/a") }
                     }
                 },
                 testPage,
@@ -85,7 +85,7 @@ firsttag: Application Insights
                     Delimiter = "~~~",
                     SingleValueProperties =
                     {
-                        { "title", "//article/header/h1" }
+                        { "title", new PropertyMatchExpression("//article/header/h1") }
                     }
                 },
                 testPage,
@@ -105,7 +105,7 @@ title: Adding Application Insights to an existing Windows Store project using Vi
                     Enabled = true,
                     SingleValueProperties =
                     {
-                        { "generator", "//article/header/h9" }
+                        { "generator", new PropertyMatchExpression("//article/header/h9") }
                     }
                 },
                 testPage,
@@ -124,7 +124,7 @@ title: Adding Application Insights to an existing Windows Store project using Vi
                     Enabled = true,
                     ArrayValueProperties =
                     {
-                        { "generator", "//article/header/h9" }
+                        { "generator", new PropertyMatchExpression("//article/header/h9") }
                     }
                 },
                 testPage,
@@ -143,7 +143,7 @@ title: Adding Application Insights to an existing Windows Store project using Vi
                     Enabled = true,
                     SingleValueProperties =
                     {
-                        { "generator", "/html/head/meta[@name='generator']/@content" }
+                        { "generator", new PropertyMatchExpression("/html/head/meta[@name='generator']/@content") }
                     }
                 },
                 testPage,
@@ -163,7 +163,7 @@ generator: Orchard
                     Enabled = true,
                     SingleValueProperties =
                     {
-                        { "author", @"{{'Mike Goatly'}}" }
+                        { "author", new PropertyMatchExpression("{{'Mike Goatly'}}") }
                     }
                 },
                 testPage,
@@ -183,7 +183,7 @@ author: Mike Goatly
                     Enabled = true,
                     SingleValueProperties =
                     {
-                        { "RedirectFrom", @"{{RelativeUriPath}}" }
+                        { "RedirectFrom", new PropertyMatchExpression("{{RelativeUriPath}}") }
                     }
                 },
                 testPage,
@@ -203,7 +203,7 @@ RedirectFrom: /2012/03/some-post
                     Enabled = true,
                     ArrayValueProperties =
                     {
-                        { "Tags", @"//p[@class='tags']/a" }
+                        { "Tags", new PropertyMatchExpression("//p[@class='tags']/a") }
                     }
                 },
                 testPage,

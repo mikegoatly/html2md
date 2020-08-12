@@ -55,11 +55,47 @@ namespace Html2md.Tests.Unit
 
             sut.FrontMatter.Enabled.Should().BeTrue();
             sut.FrontMatter.SingleValueProperties.Should().BeEquivalentTo(
-                new Dictionary<string, string>
+                new Dictionary<string, PropertyMatchExpression>
                 {
-                   { "title", "//h1" }
+                   { "title", new PropertyMatchExpression("//h1") }
                 });
             sut.FrontMatter.ArrayValueProperties.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void WithDateFormatFrontMatterData_ShouldSetParameterWithDateFormatAndEnableFrontMatter()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net",
+                "--front-matter-data",
+                "title://h1:Date",
+            });
+
+            sut.FrontMatter.Enabled.Should().BeTrue();
+            sut.FrontMatter.SingleValueProperties.Should().BeEquivalentTo(
+                new Dictionary<string, PropertyMatchExpression>
+                {
+                   { "title", new PropertyMatchExpression("//h1", PropertyDataType.Date) }
+                });
+            sut.FrontMatter.ArrayValueProperties.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void WithUnknownFormatFrontMatterData_ShouldSetErrorMessage()
+        {
+            var sut = new CommandLineArgs(new[] {
+                "-o",
+                "c:\\test\\output",
+                "-u",
+                "http://goatly.net",
+                "--front-matter-data",
+                "title://h1:Unknown",
+            });
+
+            sut.Error.Should().Be("Malformed argument value for --front-matter-data - unsupported data type Unknown");
         }
 
         [Fact]
@@ -77,9 +113,9 @@ namespace Html2md.Tests.Unit
             sut.FrontMatter.Enabled.Should().BeTrue();
             sut.FrontMatter.SingleValueProperties.Should().BeEmpty();
             sut.FrontMatter.ArrayValueProperties.Should().BeEquivalentTo(
-                new Dictionary<string, string>
+                new Dictionary<string, PropertyMatchExpression>
                 {
-                   { "title", "//h1" }
+                   { "title", new PropertyMatchExpression("//h1") }
                 });
         }
 

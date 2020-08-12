@@ -21,12 +21,12 @@ namespace Html2md
         /// Gets or sets the XPath or macro properties that should be written to the Front Matter section.
         /// If an XPath is provided and more than one element matches, then the first is used.
         /// </summary>
-        public Dictionary<string, string> SingleValueProperties { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, PropertyMatchExpression> SingleValueProperties { get; set; } = new Dictionary<string, PropertyMatchExpression>();
 
         /// <summary>
         /// Gets or sets the XPath properties that should be written to the Front Matter section as a list. Each matching
         /// value will be written as an entry in the list.
         /// </summary>
-        public Dictionary<string, string> ArrayValueProperties { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, PropertyMatchExpression> ArrayValueProperties { get; set; } = new Dictionary<string, PropertyMatchExpression>();
     }
 }

@@ -11,7 +11,7 @@ namespace Html2md
                 return false;
             }
 
-            return builder[builder.Length - 1] == '\n';
+            return builder[^1] == '\n';
         }
     }
 }

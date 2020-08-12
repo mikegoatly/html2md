@@ -57,12 +57,12 @@ namespace Html2md
                         break;
 
                     case "--front-matter-data":
-                        AddArg(args, ref i, this.FrontMatter.SingleValueProperties);
+                        AddFrontMatterPropertyArg(args, ref i, this.FrontMatter.SingleValueProperties);
                         this.FrontMatter.Enabled = true;
                         break;
 
                     case "--front-matter-data-list":
-                        AddArg(args, ref i, this.FrontMatter.ArrayValueProperties);
+                        AddFrontMatterPropertyArg(args, ref i, this.FrontMatter.ArrayValueProperties);
                         this.FrontMatter.Enabled = true;
                         break;
 
@@ -146,7 +146,7 @@ namespace Html2md
             }
         }
 
-        private void AddArg(string[] args, ref int i, Dictionary<string, string> arg)
+        private void AddFrontMatterPropertyArg(string[] args, ref int i, Dictionary<string, PropertyMatchExpression> arg)
         {
             var argIndex = i;
             var argValue = GetArgParameter(args, ref i);
@@ -154,13 +154,24 @@ namespace Html2md
             {
                 var pair = argValue.Split(":");
 
-                if (pair.Length != 2)
+                if (pair.Length == 2)
                 {
-                    this.Error = "Malformed argument value for " + args[argIndex];
+                    arg[pair[0]] = new PropertyMatchExpression(pair[1]);
+                }
+                else if (pair.Length == 3)
+                {
+                    if (Enum.TryParse<PropertyDataType>(pair[2], out var dataType))
+                    {
+                        arg[pair[0]] = new PropertyMatchExpression(pair[1], dataType);
+                    }
+                    else
+                    {
+                        this.Error = "Malformed argument value for " + args[argIndex] + " - unsupported data type " + pair[2];
+                    }
                 }
                 else
-                {
-                    arg[pair[0]] = pair[1];
+                { 
+                    this.Error = "Malformed argument value for " + args[argIndex];
                 }
             }
         }
