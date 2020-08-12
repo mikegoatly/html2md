@@ -34,7 +34,7 @@ namespace Html2md.Tests.Unit
 <p>And after closing App.xaml, I tried to add App Insights again, this time it succeeded, but I obviously had to fix-up the App.xaml file by uncommenting the original XAML, and moving the new ai:TelemetryContext resource into my own resource dictionary structure.</p>
 <p>After all this, I finally discovered that currently you can’t yet view Windows Store/Phone telemetry in the preview Azure Portal, which is where the telemetry is going now, so there’s no way for me to test our whether this has actually worked… I’ll write another post when I’ve got more to add!</p>
 
-<h2 class='comment-count'>No Comments</h2>
+<h2 class='comment-count'>&quot;No Comments&quot;</h2>
 
 </article></div>
 </body>
@@ -169,6 +169,26 @@ author: ""Mike Goatly""
                 testPageUri,
                 @"---
 RedirectFrom: ""/2012/03/some-post""
+---
+");
+        }
+
+        [Fact]
+        public void ShouldDecodeHtmlEntities()
+        {
+            this.RunFrontMatterTest(
+                new FrontMatterOptions()
+                {
+                    Enabled = true,
+                    SingleValueProperties =
+                    {
+                        { "test", new PropertyMatchExpression("//h2[@class='comment-count']") }
+                    }
+                },
+                testPage,
+                testPageUri,
+                @"---
+test: ""\""No Comments\""""
 ---
 ");
         }

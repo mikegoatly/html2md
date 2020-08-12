@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace Html2md
 {
@@ -109,6 +110,8 @@ namespace Html2md
                     : text,
                 _ => throw new ArgumentException("Unknown property data type: " + dataType, nameof(dataType)),
             };
+
+            text = HttpUtility.HtmlDecode(text);
 
             return "\"" + text.Replace("\"", "\\\"") + "\"";
         }
