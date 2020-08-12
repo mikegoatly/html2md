@@ -342,12 +342,12 @@ namespace Html2md
                 );
         }
 
-        private HtmlNodeCollection GetTableRows(HtmlNode node)
+        private IList<HtmlNode> GetTableRows(HtmlNode node)
         {
-            var tbody = node.SelectSingleNode("tbody");
+            var tbody = node.SelectNodes("tbody");
             if (tbody != null)
             {
-                return tbody.SelectNodes("tr");
+                return tbody.SelectMany(b => b.SelectNodes("tr") ?? Enumerable.Empty<HtmlNode>()).ToList();
             }
 
             return node.SelectNodes("tr");

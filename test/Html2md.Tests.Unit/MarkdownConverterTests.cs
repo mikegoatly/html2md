@@ -383,6 +383,32 @@ test2</td>
         }
 
         [Fact]
+        public async Task ShouldHandleMalformedTableWithTwoBodyTags()
+        {
+            await TestConverter(
+                    @"<table>
+    <tbody>
+        <tr>
+            <td>Col 1</td>
+            <td>Col 2</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr>
+            <td>test</td>
+            <td>test2</td>
+        </tr>
+    </tbody>
+</table>",
+                    $@"
+|Col 1|Col 2|
+|-|-|
+|test|test2|
+
+");
+        }
+
+        [Fact]
         public async Task ShouldConvertTableWithNoHeaderRowUsingFirstRowAsHeader()
         {
             await TestConverter(
