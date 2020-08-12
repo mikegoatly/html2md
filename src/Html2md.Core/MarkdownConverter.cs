@@ -286,6 +286,7 @@ namespace Html2md
         {
             this.EmitNewLine(builder, state);
 
+            state = state.WithAllNewLinesStripped();
             var (headers, skipFirstRow) = this.GetTableHeaders(node, state);
 
             foreach (var header in headers)
@@ -314,7 +315,7 @@ namespace Html2md
                 foreach (var cell in cells)
                 {
                     builder.Append("|");
-                    this.ProcessNode(pageUri, cell, builder, imageCollector, state.WithAllNewLinesStripped());
+                    this.ProcessNode(pageUri, cell, builder, imageCollector, state);
                 }
 
                 builder.AppendLine("|");

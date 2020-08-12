@@ -361,7 +361,8 @@ line 2
                     @"<table>
     <thead>
         <tr>
-            <th>Col 1</th>
+            <th>Col
+1</th>
             <th>Col 2</th>
         </tr>
     </thead>
