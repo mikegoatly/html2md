@@ -369,14 +369,14 @@ line 2
         <tr>
             <td>test
 test2</td>
-            <td><p>test3<p><p>test4</p></td>
+            <td><p>test3<p><p>test4" + '\n'+ @"test5</p></td>
         </tr>
     </tbody>
 </table>",
                     $@"
 |Col 1|Col 2|
 |-|-|
-|test test2|test3 test4 |
+|test test2|test3 test4 test5 |
 
 ");
         }

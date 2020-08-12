@@ -482,7 +482,7 @@ namespace Html2md
 
             if (state.PreventNewLines)
             {
-                text = text.Replace(Environment.NewLine, " ");
+                text = Regex.Replace(text, @"[\r\n]+", " ", RegexOptions.Multiline);
             }
 
             text = HttpUtility.HtmlDecode(text);
