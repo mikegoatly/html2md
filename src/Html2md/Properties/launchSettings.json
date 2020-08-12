@@ -2,7 +2,7 @@
   "profiles": {
     "html2md": {
       "commandName": "Project",
-      "commandLineArgs": "-o .\\content\\post\\ -i .\\static\\images\\post\\ --it article --et header,aside,nav --front-matter-delimiter ~~~ --front-matter-data title://article/header/h9 --front-matter-data \"author:{{'Mike Goatly'}}\" --front-matter-data-list tags://p[@class='tags']/a -u http://goatly.net/2006/7/20/Easy-way-to-enter-GUIDs-for-WiX-scripts.aspx -u http://goatly.net/2006/7/13/Configuring-ADAM-to-use-SSL.aspx -u http://goatly.net/2007/8/6/Determining-Framework-SDK-Path.aspx -u http://goatly.net/2008/12/8/Creating-MSBuild-XSD-schemas-for-your-custom-tasks.aspx -u http://goatly.net/2008/1/23/Collapsing-Visual-Studio-Solution-Explorer-to-Project-Definitions.aspx --logging Trace"
+      "commandLineArgs": "-o .\\content\\post\\ -i .\\static\\images\\post\\ --it article --et header,aside,nav --front-matter-data title://article/header/h9 --front-matter-data \"author:{{'Mike Goatly'}}\" --front-matter-data-list tags://p[@class='tags']/a -u http://goatly.net/2006/7/20/Easy-way-to-enter-GUIDs-for-WiX-scripts.aspx -u http://goatly.net/2006/7/13/Configuring-ADAM-to-use-SSL.aspx -u http://goatly.net/2007/8/6/Determining-Framework-SDK-Path.aspx -u http://goatly.net/2008/12/8/Creating-MSBuild-XSD-schemas-for-your-custom-tasks.aspx -u http://goatly.net/2008/1/23/Collapsing-Visual-Studio-Solution-Explorer-to-Project-Definitions.aspx --logging Trace"
     }
   }
 }

@@ -130,23 +130,6 @@ namespace Html2md.Tests.Unit
             });
 
             sut.FrontMatter.Enabled.Should().BeFalse();
-            sut.FrontMatter.Delimiter.Should().Be("---");
-        }
-
-        [Fact]
-        public void WithCustomFrontMatterDelimiter_ShouldSetParameterAccordingly()
-        {
-            var sut = new CommandLineArgs(new[] {
-                "-o",
-                "c:\\test\\output",
-                "-u",
-                "http://goatly.net",
-                "--front-matter-delimiter",
-                "~~~"
-            });
-
-            sut.FrontMatter.Enabled.Should().BeFalse();
-            sut.FrontMatter.Delimiter.Should().Be("~~~");
         }
 
         [Fact]

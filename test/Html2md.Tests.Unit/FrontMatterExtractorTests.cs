@@ -16,7 +16,7 @@ namespace Html2md.Tests.Unit
     <header>
         
 
-<h1>Adding Application Insights to an existing Windows Store project using Visual Studio 2013 Update 3</h1>
+<h1>Adding Application Insights to an existing Windows Store project using ""Visual Studio 2013 Update 3""</h1>
 
     <p class='tags'>
         <span>Tags:</span>
@@ -69,30 +69,9 @@ namespace Html2md.Tests.Unit
                 testPage,
                 testPageUri,
                 @"---
-title: Adding Application Insights to an existing Windows Store project using Visual Studio 2013 Update 3
-firsttag: Application Insights
+title: \""Adding Application Insights to an existing Windows Store project using \""Visual Studio 2013 Update 3\""\""
+firsttag: \""Application Insights\""
 ---
-");
-        }
-
-        [Fact]
-        public void ShouldUseAlternativeDelimiterIfProvided()
-        {
-            this.RunFrontMatterTest(
-                new FrontMatterOptions()
-                {
-                    Enabled = true,
-                    Delimiter = "~~~",
-                    SingleValueProperties =
-                    {
-                        { "title", new PropertyMatchExpression("//article/header/h1") }
-                    }
-                },
-                testPage,
-                testPageUri,
-                @"~~~
-title: Adding Application Insights to an existing Windows Store project using Visual Studio 2013 Update 3
-~~~
 ");
         }
 
@@ -149,7 +128,7 @@ title: Adding Application Insights to an existing Windows Store project using Vi
                 testPage,
                 testPageUri,
                 @"---
-generator: Orchard
+generator: \""Orchard\""
 ---
 ");
         }
@@ -169,7 +148,7 @@ generator: Orchard
                 testPage,
                 testPageUri,
                 @"---
-author: Mike Goatly
+author: \""Mike Goatly\""
 ---
 ");
         }
@@ -189,7 +168,7 @@ author: Mike Goatly
                 testPage,
                 testPageUri,
                 @"---
-RedirectFrom: /2012/03/some-post
+RedirectFrom: \""/2012/03/some-post\""
 ---
 ");
         }
@@ -210,9 +189,9 @@ RedirectFrom: /2012/03/some-post
                 testPageUri,
                 @"---
 Tags:
-  - Application Insights
-  - WinRT
-  - Visual Studio
+- \""Application Insights\""
+- \""WinRT\""
+- \""Visual Studio\""
 ---
 ");
         }

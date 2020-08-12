@@ -96,9 +96,6 @@ namespace Html2md
             Console.WriteLine("--front-matter-data-list <PROPERTY:XPATH>");
             Console.WriteLine("Allows for configuration of list-based information to be extracted to a Front Matter property.");
             Console.WriteLine();
-            Console.WriteLine("--front-matter-delimiter <DELIMITER>");
-            Console.WriteLine("The delimiter to write out for the Front Matter section of the converted document. The default is ---");
-            Console.WriteLine();
             Console.WriteLine("--logging <None|Trace|Debug|Information|Warning|Error|Critical>");
             Console.WriteLine("By default no logging takes place - you can turn on logging at different levels with this flag.");
             Console.WriteLine();

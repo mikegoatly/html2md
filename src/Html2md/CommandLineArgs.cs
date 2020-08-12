@@ -52,10 +52,6 @@ namespace Html2md
                         SaveArg(args, ref i, ref this.imageOutputLocation);
                         break;
 
-                    case "--front-matter-delimiter":
-                        this.FrontMatter.Delimiter = GetArgParameter(args, ref i) ?? this.FrontMatter.Delimiter;
-                        break;
-
                     case "--front-matter-data":
                         AddFrontMatterPropertyArg(args, ref i, this.FrontMatter.SingleValueProperties);
                         this.FrontMatter.Enabled = true;

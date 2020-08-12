@@ -15,7 +15,7 @@ namespace Html2md
             }
 
             var builder = new StringBuilder();
-            builder.AppendLine(options.Delimiter);
+            builder.AppendLine("---");
 
             foreach (var singleValue in options.SingleValueProperties)
             {
@@ -45,12 +45,12 @@ namespace Html2md
                 foreach (var match in matches)
                 {
                     builder
-                        .Append("  - ")
+                        .Append("- ")
                         .AppendLine(FormatValue(match.GetDirectInnerText().Trim(), format));
                 }
             }
 
-            builder.AppendLine(options.Delimiter);
+            builder.AppendLine("---");
 
             return builder.ToString();
         }
@@ -108,10 +108,10 @@ namespace Html2md
                 case PropertyDataType.Date:
                     if (DateTime.TryParse(text, out var dateTime))
                     {
-                        return dateTime.ToString("O");
+                        return "\"" + dateTime.ToString("O") + "\"";
                     }
 
-                    return text;
+                    return "\"" + text.Replace("\"", "\"\"") + "\"";
                 default:
                     throw new ArgumentException("Unknown property data type: " + dataType, nameof(dataType));
             }

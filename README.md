@@ -8,7 +8,7 @@ your content, but hopefully it's useful.
 Reverse engineer markdown from an HTML page, including:
 
 - Re-linking and downloading of images
-- Front Matter metadata generation
+- Front Matter metadata generation (Currently only YAML is supported)
 
 ## Usage as a dotnet tool
 
@@ -53,9 +53,6 @@ return /pages/page-1
 --front-matter-data-list <PROPERTY:XPATH[:Date]>
 Allows for configuration of list-based information to be extracted to a Front Matter property. You can optionally specify
 that the data should be formatted as a date. (Values not convertable to dates will be rendered as-is.)
-
---front-matter-delimiter <DELIMITER>
-The delimiter to write out for the Front Matter section of the converted document. The default is ---
 
 --logging <None|Trace|Debug|Information|Warning|Error|Critical>
 By default no logging takes place - you can turn on logging at different levels with this flag.
@@ -148,7 +145,6 @@ a document you don't want translating to markdown, e.g. aside, nav, etc.
 - `CodeLanguageClassMap`: A dictionary mapping between class names that can appear on `pre` tags and the language they map to.E.g. you might map the class name "sh_csharp" to "csharp" and "sh_powershell" to "powershell".
 - `FrontMatter`: Configuration for how Front Matter metadata should be emitted into a converted document.
   - `Enabled`: Whether Front Matter metadata should be emitted. Defaults to `false`.
-  - `Delimiter`: The delimiter to write to the Front Matter section. Defaults to `---`.
   - `SingleValueProperties`: Configuration of information to be extracted to a Front Matter property. This can be an XPath to an element 
 or attribute in the HTML page, a string constant or a supported macro. Supported macros:
     - RelativeUriPath: The relative path of the page being converted. e.g. for https://example.com/pages/page-1 the macro would 
