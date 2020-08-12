@@ -62,7 +62,7 @@ namespace Html2md.Tests.Unit
             await TestConverter(
                 "<body><h1>Doc title</h1><p>test</p></body>",
                 @"---
-Title: Doc title
+Title: ""Doc title""
 ---
 test
 
@@ -84,7 +84,7 @@ test
             await TestConverter(
                 "<body><h1>Thursday, August 7, 2014 11:55:08 AM</h1><p>test</p></body>",
                 @"---
-Title: 2014-08-07T11:55:08.0000000
+Title: ""2014-08-07T11:55:08.0000000""
 ---
 test
 

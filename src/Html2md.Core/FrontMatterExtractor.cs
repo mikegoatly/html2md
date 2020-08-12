@@ -101,20 +101,16 @@ namespace Html2md
 
         private static string FormatValue(string text, PropertyDataType dataType)
         {
-            switch (dataType)
+            text = dataType switch
             {
-                case PropertyDataType.Any:
-                    return text;
-                case PropertyDataType.Date:
-                    if (DateTime.TryParse(text, out var dateTime))
-                    {
-                        return "\"" + dateTime.ToString("O") + "\"";
-                    }
+                PropertyDataType.Any => text,
+                PropertyDataType.Date => DateTime.TryParse(text, out var dateTime)
+                    ? dateTime.ToString("O")
+                    : text,
+                _ => throw new ArgumentException("Unknown property data type: " + dataType, nameof(dataType)),
+            };
 
-                    return "\"" + text.Replace("\"", "\"\"") + "\"";
-                default:
-                    throw new ArgumentException("Unknown property data type: " + dataType, nameof(dataType));
-            }
+            return "\"" + text.Replace("\"", "\\\"") + "\"";
         }
     }
 }
