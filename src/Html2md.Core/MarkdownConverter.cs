@@ -166,7 +166,7 @@ namespace Html2md
                                         break;
 
                                     case "br":
-                                        builder.AppendLine();
+                                        this.EmitNewLine(builder, state, 1);
                                         break;
 
                                     case "blockquote":
@@ -314,7 +314,7 @@ namespace Html2md
                 foreach (var cell in cells)
                 {
                     builder.Append("|");
-                    this.ProcessNode(pageUri, cell, builder, imageCollector, state);
+                    this.ProcessNode(pageUri, cell, builder, imageCollector, state.WithAllNewLinesStripped());
                 }
 
                 builder.AppendLine("|");
@@ -375,19 +375,42 @@ namespace Html2md
                 .Append(" ");
         }
 
-        private void EmitNewLine(StringBuilder builder, ConversionState state)
+        private void EmitNewLine(StringBuilder builder, ConversionState state, int count = 2)
         {
             if (state.LinePrefix != null)
             {
-                builder.AppendLine()
-                    .Append(state.LinePrefix)
-                    .AppendLine(" ")
-                    .Append(state.LinePrefix)
+                if (state.PreventNewLines)
+                {
+                    this.logger.LogWarning("New lines are being emitted in an unexpected context (e.g. a list in a table cell) - output is likely malformed.");
+                }
+
+                builder.AppendLine();
+
+                for (var i = 0; i < count - 1; i++)
+                {
+                    builder.Append(state.LinePrefix)
+                        .AppendLine(" ");
+                }
+
+                builder.Append(state.LinePrefix)
                     .Append(' ');
             }
             else
             {
-                builder.AppendLine().AppendLine();
+                if (state.PreventNewLines)
+                {
+                    if (builder[^1] != ' ')
+                    {
+                        builder.Append(' ');
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < count; i++)
+                    {
+                        builder.AppendLine();
+                    }
+                }
             }
         }
 
@@ -455,6 +478,11 @@ namespace Html2md
             {
                 // Escape markdown characters that may clash
                 text = Regex.Replace(text, "[\\\\`*_{}\\[\\]()#+-.!]", "\\$0");
+            }
+
+            if (state.PreventNewLines)
+            {
+                text = text.Replace(Environment.NewLine, " ");
             }
 
             text = HttpUtility.HtmlDecode(text);

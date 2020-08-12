@@ -355,6 +355,33 @@ line 2
         }
 
         [Fact]
+        public async Task ShouldPreventNewLinesAppearingInCells()
+        {
+            await TestConverter(
+                    @"<table>
+    <thead>
+        <tr>
+            <th>Col 1</th>
+            <th>Col 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>test
+test2</td>
+            <td><p>test3<p><p>test4</p></td>
+        </tr>
+    </tbody>
+</table>",
+                    $@"
+|Col 1|Col 2|
+|-|-|
+|test test2|test3 test4 |
+
+");
+        }
+
+        [Fact]
         public async Task ShouldConvertTableWithNoHeaderRowUsingFirstRowAsHeader()
         {
             await TestConverter(

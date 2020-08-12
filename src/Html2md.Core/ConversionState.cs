@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
 
 namespace Html2md
@@ -13,6 +14,7 @@ namespace Html2md
             this.EmitMarkDownStyles = previous.EmitMarkDownStyles;
             this.LinePrefix = previous.LinePrefix;
             this.NodesToExclude = previous.NodesToExclude;
+            this.PreventNewLines = previous.PreventNewLines;
         }
 
         public string? ListItemPrefix { get; private set; }
@@ -25,6 +27,7 @@ namespace Html2md
 
         public string? LinePrefix { get; private set; }
         public ISet<HtmlNode> NodesToExclude { get; private set; }
+        public bool PreventNewLines { get; private set; }
 
         public static ConversionState InitialState(ISet<HtmlNode> nodesToExclude)
         {
@@ -76,6 +79,14 @@ namespace Html2md
             return new ConversionState(this)
             {
                 LinePrefix = prefix
+            };
+        }
+
+        public ConversionState WithAllNewLinesStripped()
+        {
+            return new ConversionState(this)
+            {
+                PreventNewLines = true
             };
         }
     }
