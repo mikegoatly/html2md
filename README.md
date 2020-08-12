@@ -26,10 +26,10 @@ Options:
 --image-output|-i <IMAGE OUTPUT LOCATION>
 If no image output location is specified then they will be written to the same folder as the markdown file.
 
---include-tags|--it|-t <COMMA SEPARATED TAG LIST>
+--include-tags|--it|-t <TAG|XPATH,[TAG|XPATH[,...]]>
 If unspecified the entire body tag will be processed, otherwise only text contained in the specified tags will be processed.
 
---exclude-tags|--et|-e <COMMA SEPARATED TAG LIST>
+--exclude-tags|--et|-e <TAG|XPATH,[TAG|XPATH[,...]]>
 Allows for specific tags to be ignored.
 
 --image-path-prefix|--ipp <IMAGE PATH PREFIX>
@@ -142,8 +142,8 @@ In `ConversionOptions` you can specify:
 images from a different location, relative or absolute.
 - `DefaultCodeLanguage`: The default code language to apply to code blocks mapped from `pre` tags.
 The default is `csharp`.
-- `IncludeTags`: The set of tags to include in the conversion process. If this is empty then all elements will processed.
-- `ExcludeTags`: The set of tags to exclude from the conversion process. You can use this if there are certain parts of
+- `IncludeTags`: The set of tags or XPaths for tags to include in the conversion process. If this is empty then all elements will processed.
+- `ExcludeTags`: The set of tags or XPaths for tags to exclude from the conversion process. You can use this if there are certain parts of
 a document you don't want translating to markdown, e.g. aside, nav, etc.
 - `CodeLanguageClassMap`: A dictionary mapping between class names that can appear on `pre` tags and the language they map to.E.g. you might map the class name "sh_csharp" to "csharp" and "sh_powershell" to "powershell".
 - `FrontMatter`: Configuration for how Front Matter metadata should be emitted into a converted document.

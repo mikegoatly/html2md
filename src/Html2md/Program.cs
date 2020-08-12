@@ -73,10 +73,10 @@ namespace Html2md
             Console.WriteLine("--image-output|-i <IMAGE OUTPUT LOCATION>");
             Console.WriteLine("If no image output location is specified then they will be written to the same folder as the markdown file.");
             Console.WriteLine();
-            Console.WriteLine("--include-tags|--it|-t <COMMA SEPARATED TAG LIST>");
+            Console.WriteLine("--include-tags|--it|-t <TAG|XPATH,[TAG|XPATH[,...]]>");
             Console.WriteLine("If unspecified the entire body tag will be processed, otherwise only text contained in the specified tags will be processed.");
             Console.WriteLine();
-            Console.WriteLine("--exclude-tags|--et|-e <COMMA SEPARATED TAG LIST>");
+            Console.WriteLine("--exclude-tags|--et|-e <TAG|XPATH,[TAG|XPATH[,...]]>");
             Console.WriteLine("Allows for specific tags to be ignored.");
             Console.WriteLine();
             Console.WriteLine("--image-path-prefix|--ipp <IMAGE PATH PREFIX>");

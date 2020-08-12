@@ -1,4 +1,7 @@
-﻿namespace Html2md
+﻿using HtmlAgilityPack;
+using System.Collections.Generic;
+
+namespace Html2md
 {
     internal struct ConversionState
     {
@@ -9,12 +12,8 @@
             this.ListItemPrefix = previous.ListItemPrefix;
             this.EmitMarkDownStyles = previous.EmitMarkDownStyles;
             this.LinePrefix = previous.LinePrefix;
+            this.NodesToExclude = previous.NodesToExclude;
         }
-
-        public static ConversionState InitialState { get; } = new ConversionState
-        {
-            EmitMarkDownStyles = true
-        };
 
         public string? ListItemPrefix { get; private set; }
 
@@ -25,6 +24,16 @@
         public int ListDepth { get; private set; }
 
         public string? LinePrefix { get; private set; }
+        public ISet<HtmlNode> NodesToExclude { get; private set; }
+
+        public static ConversionState InitialState(ISet<HtmlNode> nodesToExclude)
+        {
+            return new ConversionState
+            {
+                NodesToExclude = nodesToExclude,
+                EmitMarkDownStyles = true
+            };
+        }
 
         public ConversionState WithRenderingEnabled()
         {

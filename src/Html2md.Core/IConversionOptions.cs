@@ -25,13 +25,15 @@ namespace Html2md
         IDictionary<string, string> CodeLanguageClassMap { get; }
 
         /// <summary>
-        /// Gets the set of tags to include in the conversion process. If this is empty then all elements will processed.
+        /// Gets the set of tags to include in the conversion process. If this is empty then all elements will processed. These
+        /// can be tag names or an XPath query to tags to include.
         /// </summary>
         ISet<string> IncludeTags { get; }
 
         /// <summary>
         /// Gets the set of tags to exclude from the conversion process. You can use this if there are certain parts of
-        /// a document you don't want translating to markdown, e.g. aside, nav, etc.
+        /// a document you don't want translating to markdown, e.g. aside, nav, etc.  These
+        /// can be tag names or an XPath query to tags to include.
         /// </summary>
         ISet<string> ExcludeTags { get; }
 

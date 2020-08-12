@@ -137,6 +137,37 @@ test
         }
 
         [Fact]
+        public async Task ShouldOnlyProcessIncludedNodesFromXPath()
+        {
+            await TestConverter(
+                "<body><article>Should appear</article><article>Should also appear</article><p>This too</p></body>",
+                @"Should appear
+
+Should also appear
+
+This too
+
+",
+                options: new ConversionOptions
+                {
+                    IncludeTags = { "//article", "//p" }
+                });
+        }
+
+        [Fact]
+        public async Task ShouldExcludeSpecificNodesIndicatedByXPaths()
+        {
+            await TestConverter(
+                "<body><article>Should appear <div class='comments'>Should be ignored</div></article></body>",
+                @"Should appear ",
+                options: new ConversionOptions
+                {
+                    IncludeTags = { "//article" },
+                    ExcludeTags = { "//div[@class='comments']"}
+                });
+        }
+
+        [Fact]
         public async Task ShouldNotProcessExcludedTags()
         {
             await TestConverter(

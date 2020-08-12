@@ -20,7 +20,11 @@ namespace Html2md
         private readonly IConversionOptions options;
         private readonly ILogger logger;
         private readonly HttpClient httpClient;
+        private readonly List<string> includeXPaths;
+        private readonly HashSet<string> includeTags;
+        private readonly List<string> excludeXPaths;
         private readonly FrontMatterExtractor frontMatterExtractor = new FrontMatterExtractor();
+        private readonly HashSet<string> excludeTags;
 
         public MarkdownConverter(IConversionOptions options, ILogger? logger = null)
             : this(options, null, logger)
@@ -32,6 +36,12 @@ namespace Html2md
             this.options = options;
             this.logger = logger ?? NullLogger.Instance;
             this.httpClient = httpClient ?? new HttpClient();
+
+            this.includeXPaths = this.options.IncludeTags.Where(t => t.StartsWith("/")).ToList();
+            this.includeTags = this.options.IncludeTags.Except(this.includeXPaths).ToHashSet();
+
+            this.excludeXPaths = this.options.ExcludeTags.Where(t => t.StartsWith("/")).ToList();
+            this.excludeTags = this.options.ExcludeTags.Except(this.includeXPaths).ToHashSet();
         }
 
         public async Task<ConvertionResult> ConvertAsync(IEnumerable<Uri> urls)
@@ -78,7 +88,25 @@ namespace Html2md
             }
 
             this.logger.LogDebug("Processing page content");
-            this.ProcessNode(pageUri, doc.DocumentNode, builder, imageCollector, ConversionState.InitialState);
+
+            this.logger.LogTrace("Building list of explicitly included elements");
+            var nodesToProcess = this.includeXPaths.SelectMany(p => doc.DocumentNode.SelectNodes(p) ?? Enumerable.Empty<HtmlNode>()).ToList();
+            var nodesToExclude = this.excludeXPaths.SelectMany(p => doc.DocumentNode.SelectNodes(p) ?? Enumerable.Empty<HtmlNode>()).ToHashSet();
+
+            if (nodesToProcess.Count == 0)
+            {
+                nodesToProcess.Add(doc.DocumentNode);
+            }
+
+            var index = 0;
+            foreach (var node in nodesToProcess)
+            {
+                this.ProcessNode(pageUri, node, builder, imageCollector, ConversionState.InitialState(nodesToExclude));
+                if (++index != nodesToProcess.Count)
+                {
+                    builder.AppendLine().AppendLine();
+                }
+            }
 
             return new ConvertedDocument(pageUri, this.RemoveRedundantWhiteSpace(builder.ToString()));
         }
@@ -109,7 +137,7 @@ namespace Html2md
 
                 case HtmlNodeType.Document:
                 case HtmlNodeType.Element:
-                    if (!this.options.ExcludeTags.Contains(node.Name))
+                    if (!this.excludeTags.Contains(node.Name) && !state.NodesToExclude.Contains(node))
                     {
                         var emitNewLineAfterChildren = false;
                         if (this.IsIncludedTag(node.Name))
@@ -217,7 +245,7 @@ namespace Html2md
 
         private bool IsIncludedTag(string tagName)
         {
-            return this.options.IncludeTags.Count == 0 || this.options.IncludeTags.Contains(tagName);
+            return this.includeTags.Count == 0 || this.includeTags.Contains(tagName);
         }
 
         private void ProcessChildNodes(
