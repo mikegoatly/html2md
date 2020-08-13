@@ -600,7 +600,23 @@ para 2
 text</blockquote>",
                 @"
 > text
-text
+> text
+
+");
+        }
+
+        [Fact]
+        public async Task ShouldConvertNestedContentInBlockquote()
+        {
+            await TestConverter(
+                @"<blockquote>text
+<ul><li>text</li></ul></blockquote>",
+                @"
+> text
+> 
+> - text
+> 
+> 
 
 ");
         }

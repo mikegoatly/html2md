@@ -365,7 +365,7 @@ namespace Html2md
 
         private void EmitListItemPrefix(StringBuilder builder, ConversionState state)
         {
-            builder.AppendLine();
+            this.EmitNewLine(builder, state, 1);
 
             if (state.ListDepth > 1)
             {
@@ -484,6 +484,10 @@ namespace Html2md
             if (state.PreventNewLines)
             {
                 text = Regex.Replace(text, @"[\r\n]+", " ", RegexOptions.Multiline);
+            }
+            else if (state.LinePrefix != null)
+            {
+                text = Regex.Replace(text, @"[\r\n]+", Environment.NewLine + state.LinePrefix + " ", RegexOptions.Multiline);
             }
 
             text = HttpUtility.HtmlDecode(text);
