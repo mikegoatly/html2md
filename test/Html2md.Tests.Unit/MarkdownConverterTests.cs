@@ -687,6 +687,14 @@ text</blockquote>",
         }
 
         [Fact]
+        public async Task ShouldRenderBoldLinkToExternalSite()
+        {
+            await TestConverter(
+                $@"<strong>Open <a href=""https://github.com/"">Github</a></strong>",
+                @"**Open [Github](https://github.com/)**");
+        }
+
+        [Fact]
         public async Task ShouldFetchLinkedImage()
         {
             await TestConverter(

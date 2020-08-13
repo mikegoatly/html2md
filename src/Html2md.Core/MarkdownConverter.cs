@@ -207,12 +207,12 @@ namespace Html2md
 
                                     case "i":
                                     case "em":
-                                        this.EmitFormattedText(node, builder, "*", state);
+                                        this.EmitFormattedText(pageUri, node, builder, "*", imageCollector, state);
                                         return;
 
                                     case "b":
                                     case "strong":
-                                        this.EmitFormattedText(node, builder, "**", state);
+                                        this.EmitFormattedText(pageUri, node, builder, "**", imageCollector, state);
                                         return;
 
                                     case "pre":
@@ -458,12 +458,13 @@ namespace Html2md
             builder.AppendLine("```");
         }
 
-        private void EmitFormattedText(HtmlNode node, StringBuilder builder, string wrapWith, ConversionState state)
+        private void EmitFormattedText(Uri pageUri, HtmlNode node, StringBuilder builder, string wrapWith, ImageCollector imageCollector, ConversionState state)
         {
-            builder
-                .Append(wrapWith)
-                .Append(this.ExtractText(node, state))
-                .Append(wrapWith);
+            builder.Append(wrapWith);
+
+            ProcessChildNodes(pageUri, node.ChildNodes, builder, imageCollector, state);
+                
+            builder.Append(wrapWith);
         }
 
         private string ExtractText(HtmlNode node, ConversionState state)
