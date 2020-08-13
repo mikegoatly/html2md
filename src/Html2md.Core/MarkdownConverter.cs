@@ -328,7 +328,7 @@ namespace Html2md
             var skipFirstRow = false;
             if (headRow == null)
             {
-                headRow = node.SelectSingleNode("//tr");
+                headRow = node.SelectSingleNode(".//tr");
                 skipFirstRow = true;
             }
 

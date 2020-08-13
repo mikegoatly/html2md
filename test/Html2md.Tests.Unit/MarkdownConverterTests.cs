@@ -433,6 +433,50 @@ test2</td>
         }
 
         [Fact]
+        public async Task ShouldConvertSuccessiveTablesWithoutHeadersWithCorrectColumns()
+        {
+            await TestConverter(
+                    @"
+<table>
+    <tbody>
+        <tr>
+            <td>1-1</td>
+            <td>1-2</td>
+        </tr>
+        <tr>
+            <td>2-1</td>
+            <td>2-2</td>
+        </tr>
+    </tbody>
+</table>
+
+<table>
+    <tbody>
+        <tr>
+            <td>1-1</td>
+            <td>1-2</td>
+            <td>1-3</td>
+        </tr>
+        <tr>
+            <td>2-1</td>
+            <td>2-2</td>
+            <td>2-3</td>
+        </tr>
+    </tbody>
+</table>",
+                    $@"
+|1\-1|1\-2|
+|-|-|
+|2\-1|2\-2|
+
+|1\-1|1\-2|1\-3|
+|-|-|-|
+|2\-1|2\-2|2\-3|
+
+");
+        }
+
+        [Fact]
         public async Task ShouldConvertPreWithoutClass()
         {
             await TestConverter(
