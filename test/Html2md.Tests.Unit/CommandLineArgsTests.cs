@@ -30,7 +30,7 @@ namespace Html2md.Tests.Unit
 
             sut.Error.Should().BeNull();
             sut.OutputLocation.Should().Be("c:\\test\\output");
-            sut.Uris.Should().BeEquivalentTo(new Uri("http://goatly.net"));
+            sut.Uris.Should().BeEquivalentTo([new Uri("http://goatly.net")]);
             sut.ImageOutputLocation.Should().Be("c:\\test\\images");
             sut.ShowHelp.Should().BeFalse();
             sut.CodeLanguageClassMap.Should().BeEquivalentTo(
@@ -145,7 +145,7 @@ namespace Html2md.Tests.Unit
             });
 
             sut.OutputLocation.Should().Be("c:\\test\\output");
-            sut.Uris.Should().BeEquivalentTo(new Uri("http://goatly.net"));
+            sut.Uris.Should().BeEquivalentTo([new Uri("http://goatly.net")]);
             sut.ImageOutputLocation.Should().Be("c:\\test\\images");
             sut.ShowHelp.Should().BeFalse();
         }
@@ -163,7 +163,7 @@ namespace Html2md.Tests.Unit
             });
 
             sut.OutputLocation.Should().Be("c:\\test\\output");
-            sut.Uris.Should().BeEquivalentTo(new Uri("http://goatly.net"), new Uri("http://goatly.net/page2"));
+            sut.Uris.Should().BeEquivalentTo([new Uri("http://goatly.net"), new Uri("http://goatly.net/page2")]);
             sut.ShowHelp.Should().BeFalse();
         }
 
