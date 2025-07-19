@@ -1,24 +1,20 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Html2md
 {
     public class CommandLineArgs : IConversionOptions
     {
-        [NotNull]
         private readonly string? outputLocation;
-
-        [NotNull]
         private readonly string? imageOutputLocation;
 
-        private readonly List<Uri> uris = new List<Uri>();
+        private readonly List<Uri> uris = [];
 
-        private readonly HashSet<string> includeTags = new HashSet<string>(new[] { "body" });
-        private readonly HashSet<string> excludeTags = new HashSet<string>();
-        private readonly Dictionary<string, string> codeLanguageClassMap = new Dictionary<string, string>();
+        private readonly HashSet<string> includeTags = [.. new[] { "body" }];
+        private readonly HashSet<string> excludeTags = [];
+        private readonly Dictionary<string, string> codeLanguageClassMap = [];
         private readonly string defaultCodeLanguage = "csharp";
         private readonly string imagePathPrefix = "";
         private readonly string? logLevel = "Error";
@@ -166,7 +162,7 @@ namespace Html2md
                     }
                 }
                 else
-                { 
+                {
                     this.Error = "Malformed argument value for " + args[argIndex];
                 }
             }
@@ -214,9 +210,9 @@ namespace Html2md
 
         public bool ShowHelp { get; }
 
-        public string OutputLocation => this.outputLocation;
+        public string OutputLocation => this.outputLocation ?? throw new InvalidOperationException("No output location set");
 
-        public string ImageOutputLocation => this.imageOutputLocation ?? this.outputLocation;
+        public string ImageOutputLocation => this.imageOutputLocation ?? this.OutputLocation;
 
         public IReadOnlyList<Uri> Uris => this.uris;
 
